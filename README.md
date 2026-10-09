@@ -158,6 +158,3 @@ To mitigate this, all skills (apart from `plan-it` and `spec-it`) are setup in s
 | `implement-and-monitor-it`, `implement-it` | Spec and tickets details | User invokes it with the spec's GitHub issue ID, the skill loads into context, its body and body of the GitHub sub-issues for the tickets of the spec |
 | `pr-it` | Implementation details | User invokes it with the spec's GitHub issue ID, the skill loads the implementation report created by `implement-it`, into context |
 | `monitor-it`, `address-it` | Implementation and PR details | User invokes it with the spec's GitHub issue ID, the skill loads into context the implementation report created by `implement-it` and the PR body created by `pr-it` |
-
-> [!Note]
-> We suggest invoking `monitor-it` and `address-it` with the spec's GitHub issue ID, but they also work with the PR number; when given a numeric ID, they first look for an implementation report named for that spec issue. If none exists, they search the reports for a matching PR number. With no matching report, they treat the ID as a PR number and load the PR context from GitHub.

@@ -23,14 +23,14 @@ Require implementation and fix workers to report material decisions, tradeoffs, 
 
 ## Implementation report
 
-For a GitHub spec, fetch its authoritative issue number and URL. Create `docs/implementations/<spec-gh-issue-id>.md` in the integration checkout, using the spec issue number, not a child ticket or issue title. Reuse that report on resumed runs; verify its recorded spec URL before editing and preserve unrelated content and any recorded PR details. For a local spec, use its established filesystem-safe identifier instead of a GitHub issue number.
+For a GitHub spec, fetch its authoritative issue number and URL. Create `docs/implementations/<spec-gh-issue-id>.md` in the integration checkout, using the spec issue number, not a child ticket or issue title. Reuse that report on resumed runs; verify its recorded spec URL before editing and preserve unrelated content. For a local spec, use its established filesystem-safe identifier instead of a GitHub issue number.
 
 Maintain one concise report containing:
 
 - Spec and ticket pointers, repository identity, integration branch, and original pinned base SHA for recovery.
 - A brief implementation summary, material decisions and tradeoffs, approved deviations with their approval source and scope, and limitations. State when there are no approved deviations; omit other empty categories.
 - Latest validation commands and results, skipped or incomplete checks, and the latest Standards and Spec review outcomes. Identify the commit each result covers; retain unresolved failures and disclose unavailable before evidence. Keep the final reviewed SHA in the returned result as described below.
-- Pointers to relevant tests, commits, CI runs, or existing stable evidence URLs. Preserve the verified PR number and URL recorded by `pr-it`.
+- Pointers to relevant tests, commits, CI runs, or existing stable evidence URLs.
 
 Replace superseded check and review summaries rather than accumulating a round-by-round narrative or intermediate commit catalogue. Preserve material decisions, approvals, limitations, and unresolved findings across updates. Create additional evidence files only when required by the spec or repository instructions, or needed to substantiate a finding that existing references cannot establish. Keep routine raw logs and intermediate captures outside the committed report; retained evidence must exclude secrets and unrelated private material.
 
