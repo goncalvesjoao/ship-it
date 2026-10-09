@@ -60,3 +60,9 @@ Use the coordinator, monitoring reference, and resolver skill with each scenario
 | Caller supplies an explicit PR URL or a scheduled tick supplies a verified PR identity. | Bypass issue lookup, preserve supplied context and same-pass ownership, and continue the normal workflow. |
 | Numeric address-it input resolves a unique associated PR through GitHub. | Evaluate its feedback in one pass without schedules or merge-readiness decisions. |
 | pr-it publishes a reviewed implementation with a report. | Verify and return the published PR without adding a PR entry, committing a report update, or starting a post-publication implementation gate. |
+| pr-it receives a clean HEAD with exact-SHA passing checks and both zero-finding implementation reviews against the pinned base. | Reuse verified validation evidence without running the suite again. |
+| Validation evidence lacks an exact SHA, covers a different HEAD, has failed/incomplete checks, or omits a review axis for governed work. | Run required validation; governed work must pass the full implementation gate before publication. |
+| The SHA matches but the user requests fresh checks, required checks change, or the validation environment changes. | Run fresh validation rather than relying on prior results. |
+| An existing PR matches the validated HEAD, target repositories/base/branch, intended description and closing references, requested draft state, and required label. | Attach and return the verified PR without regenerating its body, rerunning checks, or writing to GitHub. |
+| An existing PR has a stale description, different head SHA or draft state, or missing review label. | Continue with that PR and repair pending work; a label-only repair preserves its correct description and reused validation. |
+| PR preparation changes the implementation after validation. | Pass the full governed implementation gate on the new SHA before publication; prior results cannot authorize the changed HEAD. |
