@@ -25,7 +25,14 @@ Require implementation and fix workers to report material decisions, tradeoffs, 
 
 For a GitHub spec, fetch its authoritative issue number and URL. Create `docs/implementations/<spec-gh-issue-id>.md` in the integration checkout, using the spec issue number, not a child ticket or issue title. Reuse that report on resumed runs; verify its recorded spec URL before editing and preserve unrelated content and any recorded PR details. For a local spec, use its established filesystem-safe identifier instead of a GitHub issue number.
 
-Record the spec URL or local source, ticket pointers, implementation summary, material decisions and tradeoffs, approved deviations with their approval source and scope, limitations, validation results, and durable evidence pointers. State when a category has no entries or evidence is unavailable; do not invent results. Include the integration branch name, its repository identity, and the original pinned base SHA for recovery. Prefer repository paths, commit references, and stable URLs over temporary logs; retain needed evidence durably without copying secrets or unrelated private material.
+Maintain one concise report containing:
+
+- Spec and ticket pointers, repository identity, integration branch, and original pinned base SHA for recovery.
+- A brief implementation summary, material decisions and tradeoffs, approved deviations with their approval source and scope, and limitations. State when there are no approved deviations; omit other empty categories.
+- Latest validation commands and results, skipped or incomplete checks, and the latest Standards and Spec review outcomes. Identify the commit each result covers; retain unresolved failures and disclose unavailable before evidence. Keep the final reviewed SHA in the returned result as described below.
+- Pointers to relevant tests, commits, CI runs, or existing stable evidence URLs. Preserve the verified PR number and URL recorded by `pr-it`.
+
+Replace superseded check and review summaries rather than accumulating a round-by-round narrative or intermediate commit catalogue. Preserve material decisions, approvals, limitations, and unresolved findings across updates. Create additional evidence files only when required by the spec or repository instructions, or needed to substantiate a finding that existing references cannot establish. Keep routine raw logs and intermediate captures outside the committed report; retained evidence must exclude secrets and unrelated private material.
 
 Create the report during implementation and update it before each review round's commit and checks so it is included in the full integration diff and review gate. Record blocked progress when possible without claiming completion. Keep the final reviewed SHA in the returned report rather than embedding a self-referential commit SHA in the Markdown. Return the report's absolute path to the caller.
 
