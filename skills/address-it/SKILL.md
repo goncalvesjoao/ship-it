@@ -28,6 +28,8 @@ Requires authenticated `gh`, access to the actual PR head repository, and implem
 
 Apply `status/in-progress`, then dispatch one implementer subagent with the actionable batch, current SHA, spec pointers, repository instructions, and required checks. Keep human decisions pending while fixing independent issues.
 
+Run independent read-only checks concurrently when repository instructions permit and their outputs, ports, fixtures, and resources do not conflict. Preserve build-before-test dependencies, serialize suites sharing browser/server state, and avoid running a second build when a test command already builds. Await every command and retain its exit status and evidence; all required checks must pass before publication or gate completion.
+
 The implementer traces callers, makes the smallest complete fixes, preserves unrelated work, runs relevant regression/repository checks, and reports files, commits, validation, and unresolved findings. It must not push or resolve conversations. The resolving agent reviews/integrates its work, verifies the remote head has not moved unexpectedly, and makes a normal push to the actual head remote. Reconcile concurrent commits and revalidate before pushing; never force-push.
 
 Before marking fixes handled or resolving their conversations, validate the batch and confirm GitHub's head SHA equals the pushed commit. Reconcile unverified commits under Recovery and blockers. Rejected/already-fixed findings need no empty commit. Repeated requests to contradict the spec or reverse the same fix require a human decision instead of alternating edits.

@@ -44,7 +44,9 @@ Fetch the labels again and verify that `status/in-progress` is the only label st
 
 ## Review and fix
 
-Supply this replacement review-and-fix loop to `implement-spec`.
+Supply this replacement review-and-fix loop to `implement-spec`. Apply this check execution rule to implementation, integration, and fix workers:
+
+Run independent read-only checks concurrently when repository instructions permit and their outputs, ports, fixtures, and resources do not conflict. Preserve build-before-test dependencies, serialize suites sharing browser/server state, and avoid running a second build when a test command already builds. Await every command and retain its exit status and evidence; all required checks must pass before publication or gate completion.
 
 1. Wait for all implementation and merge work to finish. Update the implementation report, then commit only the task's changes on the integration branch so the review includes them, preserving unrelated user changes. Record the integration `HEAD` SHA and run the repository's required checks.
 2. Invoke `code-review` against the original pinned base SHA, supplying the authoritative spec and tickets. Review the entire integration diff each round, including previous fixes. Preserve its independent Standards and Spec subagents and their separate reports.

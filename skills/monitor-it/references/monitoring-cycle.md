@@ -18,7 +18,7 @@ Recover supplied implementation context from the ledger before resolving feedbac
 
 ## Entry and review mode
 
-Resolve the PR identity, open state, labels, and Copilot review configuration/activity. For closed or merged PRs, return the terminal state. Determine whether Copilot review is in use from user preference, accessible configuration, and actual review activity/requests. Explicit Copilot opt-in permits monitoring even when automatic review is disabled. A missing review alone does not establish that Copilot is unused. If unknown, return the review-mode question and request inactive scheduling until answered. Fetch failures remain unknown state under Recovery and waits.
+Verify the supplied PR identity and fetch open state, head, labels, and Copilot review configuration/activity in this worker. Compare supplied expected repository/base/head identity and SHA when present; reconcile mismatches before dependent writes. For closed or merged PRs, return the terminal state. Determine whether Copilot review is in use from user preference, accessible configuration, and actual review activity/requests. Explicit Copilot opt-in permits monitoring even when automatic review is disabled. A missing review alone does not establish that Copilot is unused. If unknown, return the review-mode question and request inactive scheduling until answered. Fetch failures remain unknown state under Recovery and waits.
 
 If Copilot is unused or not configured for this PR, apply and verify `status/ready-for-review` using Status labels, verify the PR remains open, and return the human-review handoff for coordinator shutdown. This branch needs no checkout/ledger or resolver pass. Use `address-it` when the user asks to address existing feedback.
 
