@@ -5,6 +5,10 @@ description: "Hand off an open GitHub PR for human review when Copilot review is
 
 # Monitor it
 
+## User questions
+
+Before asking or relaying any user question, read and follow [the user question rules](references/user-questions.md).
+
 Requires authenticated GitHub CLI (`gh`). Copilot monitoring also requires access to the PR's head repository and monitoring-worker and nested implementer subagent support. Accept a spec issue number or an explicit PR URL. Invocation authorizes the scheduled checks, scoped fixes, normal pushes to the PR's head branch, review requests and replies, labels, and assignment described here and in the monitoring workflow. Creating or editing this skill does not authorize execution. Merging is not authorized.
 
 ## Dispatch one cycle
@@ -29,7 +33,7 @@ If the worker returns active with useful work or a bounded wait, reuse a matchin
 
 Each heartbeat returns here every **120 seconds** and dispatches one fresh worker. Its saved prompt invokes this coordinator by absolute path and includes the absolute monitoring reference, resolver, project and ledger paths, PR identity, spec pointers, authorization, constraints/review preference, scheduled-tick intent, notification rules, and stop conditions. Require the prompt to load implementation context and current human decisions from the ledger; saved constraints are a snapshot and cannot override later recorded answers. Local scheduling requires the machine and desktop app to remain running.
 
-Skipped ownership conflicts leave scheduling unchanged for the next tick. Honor returned retry-after times without resetting deadlines. If scheduling is unavailable and monitoring is still needed, dispatch a worker with that limitation to finish independent work and record the blocked handoff. Relay required human questions once; review-mode decisions leave scheduling inactive until explicitly answered/resumed.
+Skipped ownership conflicts leave scheduling unchanged for the next tick. Honor returned retry-after times without resetting deadlines. If scheduling is unavailable and monitoring is still needed, dispatch a worker with that limitation to finish independent work and record the blocked handoff. Relay required human questions once through the User questions procedure; review-mode decisions leave scheduling inactive until explicitly answered/resumed.
 
 ## Stop and report
 

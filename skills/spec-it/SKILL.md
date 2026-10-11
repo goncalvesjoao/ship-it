@@ -10,6 +10,10 @@ metadata:
 
 # Spec it
 
+## User questions
+
+Before asking or relaying any user question, read and follow [the user question rules](references/user-questions.md).
+
 Requires Matt Pocock's `to-spec` skill, its prerequisites, and authenticated GitHub CLI (`gh`).
 
 1. Locate and read the installed `to-spec` skill. Invoke it using the Skill tool when available; otherwise follow its `SKILL.md`. Preserve its exploration, test-seam confirmation, spec template, and triage labels, with GitHub as the publishing destination. If a prerequisite is missing or the target repository is ambiguous, report the blocker before publishing.

@@ -10,6 +10,10 @@ metadata:
 
 # Implement it
 
+## User questions
+
+Before asking or relaying any user question, read and follow [the user question rules](references/user-questions.md).
+
 Requires Matt Pocock's `implement-spec` and `code-review` skills, their prerequisites, subagent support, and authenticated `gh` for GitHub issues. This skill extends `implement-spec` with a review gate before its finalization and cleanup.
 
 ## Implement

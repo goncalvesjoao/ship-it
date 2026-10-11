@@ -1,0 +1,5 @@
+# User questions
+
+For every user question, including questions from invoked skills or relayed from workers, use an available structured question tool permitted for that question type and current mode, such as `request_user_input_async`, `request_user_input`, or `AskUserQuestion`. Follow the tool's schema and restrictions. If no permitted structured question tool is available, explain that limitation before asking in chat. Keep required answers pending and pause dependent work until the user responds; continue independent work where possible. Silence, elapsed time, and preselected options are not answers or approval.
+
+Pass this rule to invoked skills and workers. Delegated workers return questions with the relevant draft/options and progress to their parent rather than asking the user directly; relay through parents to the user-facing coordinator, which asks using the rule above and passes the actual answer and its scope back to the worker. Preserve existing approval and recovery gates.

@@ -5,6 +5,10 @@ description: "Address PR review feedback: evaluate comments, apply justified fix
 
 # Address it
 
+## User questions
+
+Before asking or relaying any user question, read and follow [the user question rules](references/user-questions.md).
+
 Accept a spec issue number or an explicit PR URL, optionally with a reviewer or finding scope. Invocation authorizes scoped fixes, commits and normal pushes to the actual PR head branch, replies to existing feedback, conversation handling below, and status labels. Honor narrower user constraints. Creating or editing this skill does not authorize execution. Merging is not authorized.
 
 Requires authenticated `gh`, access to the actual PR head repository, and implementer subagent support for fixes. Execute the same one-pass workflow for every caller. Scheduling, new review requests, polling deadlines, assignment, and merge-readiness decisions belong to the caller.

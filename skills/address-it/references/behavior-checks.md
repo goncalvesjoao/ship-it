@@ -72,3 +72,14 @@ Use the coordinator, monitoring reference, and resolver skill with each scenario
 | A monitoring worker returns a verified compact result. | Coordinator uses that result for scheduling and reporting without repeating PR fetches; shutdown verification still checks schedules. |
 | Required lint, formatting, and tests are read-only and use independent resources. | Run them concurrently, await every command, and retain every exit status; any failed check keeps the gate unmet. |
 | Tests depend on a build, share browser/server state, or their command already builds. | Preserve dependency order and serialize conflicting suites; avoid duplicate builds without removing required checks. |
+
+## User question routing
+
+Apply these scenarios to each Ship-it skill, including questions from upstream skills and nested workers.
+
+| Scenario | Required outcome |
+| --- | --- |
+| A structured question tool is available and permitted for the question type and mode. | Ask through that tool using its schema; do not substitute a chat-only question. |
+| No structured question tool is available, or available tools prohibit this question type or mode. | Explain the tool limitation before asking in chat; preserve the existing answer or approval gate. |
+| A nested worker needs a user decision or approval. | Return the question, draft/options, and progress through parents to the user-facing coordinator. Coordinator uses the permitted structured tool or explains the fallback, then relays the actual answer and scope to the worker. |
+| A required question has no submitted answer, but time passes or an option is preselected. | Keep dependent work paused and continue only independent work; infer no answer or approval. |

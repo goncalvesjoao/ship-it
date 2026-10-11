@@ -9,6 +9,10 @@ metadata:
 
 # Plan it
 
+## User questions
+
+Before asking or relaying any user question, read and follow [the user question rules](references/user-questions.md).
+
 Requires [spec-it](../spec-it/SKILL.md), [ticket-it](../ticket-it/SKILL.md), their prerequisites, and subagent support.
 
 Invoking this skill authorizes publishing the spec and approved tickets through those skills. Preserve their user confirmation and approval steps. Creating or editing this skill does not start publication.
@@ -25,7 +29,7 @@ Invoking this skill authorizes publishing the spec and approved tickets through 
 
 Give the ticketing worker these instructions: when a delegated skill needs a user answer or approval, return to the parent with the question, relevant draft or options, current progress, and existing artifact URLs. Pause dependent work until the parent supplies the user's response.
 
-Ask the question in the parent chat and wait for the user. Relay the actual answer and its scope to the same worker, resuming it with the available follow-up tool. Repeat for further questions or revisions. Preserve `to-tickets`' breakdown review; delegation does not waive it. A request to run `plan-it` is not approval of an unseen breakdown.
+Ask the question in the parent chat through the User questions procedure and wait for the user. Relay the actual answer and its scope to the same worker, resuming it with the available follow-up tool. Repeat for further questions or revisions. Preserve `to-tickets`' breakdown review; delegation does not waive it. A request to run `plan-it` is not approval of an unseen breakdown.
 
 ## Recovery
 

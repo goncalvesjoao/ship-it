@@ -10,6 +10,10 @@ metadata:
 
 # Implement and monitor it
 
+## User questions
+
+Before asking or relaying any user question, read and follow [the user question rules](references/user-questions.md).
+
 Requires [implement-it](../implement-it/SKILL.md), [pr-it](../pr-it/SKILL.md), [monitor-it](../monitor-it/SKILL.md), and their prerequisites.
 
 Invoking this skill to deliver a spec authorizes implementation, the commits and normal pushes needed to open its PR, and the monitoring actions described by `monitor-it`, including scheduled checks, scoped fixes, review requests and replies, labels, and assignment. It does not authorize merging. Creating or editing this skill does not start delivery.
@@ -25,7 +29,7 @@ If any stage fails, is interrupted, incomplete, or unverifiable, or encounters a
 
 ## User input and recovery
 
-Instruct the worker to return required user questions or approvals to the parent with the relevant draft/options, current progress, and artifact pointers, pausing dependent work. Ask in the parent chat, wait for the user's response, and resume the same worker with the actual answer and its scope. Retain the worker identifier and report across user turns. Keep exploration and full tool output in the worker; return concise evidence sufficient to verify each gate.
+Instruct the worker to return required user questions or approvals to the parent with the relevant draft/options, current progress, and artifact pointers, pausing dependent work. Ask in the parent chat through the User questions procedure, wait for the user's response, and resume the same worker with the actual answer and its scope. Retain the worker identifier and report across user turns. Keep exploration and full tool output in the worker; return concise evidence sufficient to verify each gate.
 
 On a resumed run, inspect the retained checkout and any existing PR before restarting stages. Reuse verified implementation and published PR artifacts; repair incomplete operations rather than creating duplicates. If a worker is unavailable, give its replacement the saved progress, pinned base, reviewed SHA, artifact pointers, and accumulated user decisions, constraints, and approvals with their exact scope. Approval of an earlier draft does not approve a revised draft. Report the incomplete operation and outstanding work on failure.
 

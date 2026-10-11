@@ -10,6 +10,10 @@ metadata:
 
 # Ticket it
 
+## User questions
+
+Before asking or relaying any user question, read and follow [the user question rules](references/user-questions.md).
+
 Requires Matt Pocock's `to-tickets` skill, its prerequisites, and authenticated `gh`.
 
 ## Prepare and draft

@@ -9,6 +9,10 @@ metadata:
 
 # PR it
 
+## User questions
+
+Before asking or relaying any user question, read and follow [the user question rules](references/user-questions.md).
+
 Requires GitHub CLI (`gh`), GitHub authentication, and Matt Pocock's `pr` skill. Accept an optional `#<gh-issue-id>` identifying the spec issue, not a PR number. Without it, use the supplied context and current branch as before.
 
 1. Inspect repository instructions, `git status`, the current branch, and remotes. Resolve the target repository and base branch from the user's request, repository configuration, or GitHub's default branch. Check `gh auth status`. Ask only when the target is ambiguous or a prerequisite is missing.
