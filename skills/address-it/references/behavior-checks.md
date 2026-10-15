@@ -88,10 +88,10 @@ Apply these scenarios to each Ship-it skill, including questions from upstream s
 
 | Scenario | Required outcome |
 | --- | --- |
-| First ticket merges while later tickets and checks remain incomplete. | Create or reuse one draft PR with honest progress and closing references. Do not apply readiness labels or close tickets early. |
+| First ticket merges while later tickets and checks remain incomplete. | Let implement-spec create or reuse the initial draft and description with honest progress and closing references. Do not invoke pr, apply readiness labels, or close tickets early. |
 | Draft creation succeeds remotely but its response is lost. | Find and verify the existing PR before retrying; create no duplicate. |
 | Review finds issues or required checks fail after draft publication. | Keep the PR draft, preserve the work and report, and continue the fix loop. Draft publication does not satisfy the gate. |
-| Both review axes and required checks pass on the current clean HEAD. | Finalize the description, verify the remote SHA, mark ready, and verify the sole status label is status/ready-for-review. |
+| Both review axes and required checks pass on the current clean HEAD. | Use pr to finalize the description unless already correct, verify the remote SHA, mark ready, and verify the sole status label is status/ready-for-review. |
 | A resumed ready PR needs implementation changes. | Convert to draft, remove stale readiness statuses, and require the full gate on the changed SHA before restoring readiness. |
 | A resumed implementation report identifies a missing or conflicting integration branch. | Report a blocker; do not create a replacement branch or publish unrelated checkout contents. |
 

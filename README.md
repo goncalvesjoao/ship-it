@@ -89,7 +89,7 @@ Start by discussing your idea or feature with your agent, and when you are ready
 
 ### How they relate to each other
 
-- Solid arrows show local skill calls and worker delegation; dashed arrows invoke Matt Pocock's skills.
+- Solid arrows show local skill calls, worker delegation, and outcomes; dashed arrows invoke Matt Pocock's skills.
 - Numbered stages run in order after the previous stage succeeds.
 
 ```mermaid
@@ -99,9 +99,9 @@ flowchart TD
     specIt["spec-it"] -.-> toSpec["to-spec"]
     ticketIt["ticket-it"] -.-> toTickets["to-tickets"]
 
-    implementation["implement-it"] -.->|Opens a draft PR and adds a review and fix loop| implementSpec["implement-spec"]
+    implementation["implement-it"] -.->|1. Implement tickets and create the initial draft PR| implementSpec["implement-spec"]
     implementSpec -.->|Review the full diff after each fix until both axes and checks pass| codeReview["code-review"]
-    implementation -.->|Writes the draft and final PR description| pr["pr"]
+    implementation -.->|2. Writes the final PR description and marks it as ready| pr["pr"]
     monitor["monitor-it"] -->|Dispatch a fresh worker, every 2 min to handle existing feedback| address["address-it"]
 ```
 
