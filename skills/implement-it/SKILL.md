@@ -1,9 +1,9 @@
 ---
 name: implement-it
-description: "Implement a spec with implement-spec, repeating fixes and code-review until both review axes report zero findings."
+description: "Implement a spec with a draft PR, repeating fixes and code-review until both axes and required checks pass, then mark it ready for review."
 disable-model-invocation: true
 metadata:
-  dependency: "implement-spec, code-review"
+  dependency: "implement-spec, code-review, pr"
   credits-author: Matt Pocock
   credits-url: https://github.com/mattpocock/skills
 ---
@@ -14,16 +14,48 @@ metadata:
 
 Before asking or relaying any user question, read and follow [the user question rules](references/user-questions.md).
 
-Requires Matt Pocock's `implement-spec` and `code-review` skills, their prerequisites, subagent support, and authenticated `gh` for GitHub issues. This skill extends `implement-spec` with a review gate before its finalization and cleanup.
+Requires Matt Pocock's `implement-spec`, `code-review`, and `pr` skills, their prerequisites, subagent support, and authenticated `gh`. This skill adds integration isolation, implementation reports, and a repeated review gate.
+
+Invocation authorizes implementation, scoped commits, normal pushes, and draft PR creation and finalization. It does not authorize merging. Editing this skill does not start implementation.
 
 ## Implement
 
-1. Locate and read both installed skills. Invoke through the Skill tool when available; otherwise read and follow their `SKILL.md` files. If either skill or a required capability is unavailable, report the missing prerequisite and leave the work incomplete.
-2. Read the spec, tickets, repository instructions, and issue-tracker workflow. Pin the starting integration base to a commit SHA before implementation. Preserve that SHA and the authoritative spec pointers for every review round. For resumed work, recover the original base covering the entire spec implementation rather than using the current integration tip.
+1. Locate and read the three installed skills. Invoke through the Skill tool when available; otherwise read and follow their `SKILL.md` files. If any skill or a required capability is unavailable, report the missing prerequisite and leave the work incomplete.
+2. Read the spec, tickets, repository instructions, and issue-tracker workflow. Resolve the target repository, head remote and base branch, and check `gh auth status`. Before creating a branch on resumed work, follow the recovery procedure below. Acquire integration ownership and prepare the dedicated worktree below before issue-status writes or implementation. Pin the starting integration base to a commit SHA before implementation. Preserve that SHA and the authoritative spec pointers for every review round. For resumed work, recover the original base covering the entire spec implementation rather than using the current integration tip.
 3. Before implementation starts, apply the issue status step below to the GitHub spec issue. Apply it to each GitHub ticket when work on that ticket begins, including resumed work. For local specs or tickets without a GitHub issue, skip labeling.
-4. Invoke `implement-spec` with this explicit override: execute its implementation workflow and the review-and-fix loop below in place of its own review-and-fix step. Have it invoke `code-review`, dispatch fixes, and repeat until the gate passes, then return the review and check results before ticket closure, marking a PR ready, or worktree cleanup. Require its implementers to apply the issue status step before starting each ticket. Preserve its task graph, implementer subagents, TDD, and merger workflow. Override upstream PR creation and publication: return the reviewed implementation to the caller without creating or updating a PR. Leave publication-dependent ticket closure and PR readiness to the caller.
+4. Run `implement-spec` with these overrides: use the prepared integration worktree, apply issue status before each ticket, replace its review-and-fix step with the loop below, and defer finalization until that gate passes. Keep the PR draft until the readiness procedure succeeds.
 
 Require implementation and fix workers to report material decisions, tradeoffs, approved deviations, limitations, and evidence pointers alongside their results. Retain these findings for the caller and recovery. Record missing before evidence honestly.
+
+## Integration worktree and ownership
+
+Each spec has one dedicated integration worktree and branch, separate from the repository's primary checkout and other specs. Inspect `git worktree list --porcelain` and any attached managed worktrees before creating one. Reuse a worktree only when its repository, spec identity, branch, and exclusive availability are verified. Prefer the host's managed worktree tools when available; otherwise use `git worktree add -b <integration-branch> <absolute-path> <pinned-base-sha>`. Preserve the primary checkout's branch, index, and files. Never switch the primary checkout to an integration branch or force a branch into a second worktree.
+
+Before creating or mutating integration state, acquire `<absolute-git-common-dir>/implement-it/<spec-key>.lock` by atomic directory creation. Derive the common directory from Git, resolving it to an absolute path; use the lowercase SHA-256 hex digest of the authoritative spec URL, or the canonical absolute local spec path, as the spec key. Hash the UTF-8 identity without a trailing newline so sessions and worktrees derive the same key. Record the owning session/worker identifier and spec identity inside the lock, then the absolute checkout path, integration branch, and original pinned base as soon as established, so interruption before the first report remains recoverable. An existing lock blocks another session from writes. Reclaim it only after verifying the recorded owner and its nested writers are inactive; an old timestamp or unavailable owner status is insufficient. An interrupted or partially initialized lock with unverifiable ownership is a blocker.
+
+Keep ownership through implementation, merges, report edits, checks, and PR finalization. Nested workers operate under the same owner; serialize writes to the integration checkout. Ticket and fix implementers use their own worktrees based on the integration branch. Supply every implementer, merger, reviewer, and PR worker the absolute integration checkout path and branch plus its own checkout path when different. Run integration edits, merges, commits, checks, and PR operations explicitly in the integration checkout, using command working directories or `git -C`; verify its repository and branch before mutations rather than relying on inherited shell state.
+
+On completion, blocked handoff, or user pause, stop or await all nested writers before releasing only your own lock. Preserve the integration worktree, branch, report, and uncommitted task work for recovery and monitoring. If writers cannot be confirmed inactive, retain the lock and report the ownership blocker.
+
+## Recovery
+
+For a resumed spec, find `docs/implementations/<spec-gh-issue-id>.md` and verify its authoritative spec URL and repository before using its integration branch and original pinned base. If absent locally, inspect existing worktrees and local branch contents, then relevant remote branches after fetching if needed. Read branch contents without modifying unrelated checkouts. Reconcile the retained checkout and ownership record with the report and `git worktree list --porcelain`; reuse the verified dedicated integration worktree. If the branch is checked out in the primary checkout or an unrelated active worktree, report the conflict and preserve it until safe relocation is possible. Do not switch, reset, stash, or remove someone else's checkout to release the branch. If the recorded dedicated worktree is gone but the branch survives and is not checked out elsewhere, recreate a worktree on that branch without resetting it. Use the recorded branch; a missing or conflicting report or branch identity blocks a known prior run rather than authorizing a replacement branch. Preserve unrelated local work. Recover the associated PR using the lifecycle below before repeating publication operations.
+
+## PR lifecycle
+
+Before PR creation or updates, inspect the complete diff against the intended base and find any existing open PR for the actual head repository/branch and base in the target repository. Fetch and verify its URL, repository and head-repository identity, base, head branch/SHA, title, body, draft state, and labels. Reuse a matching PR. An ambiguous or conflicting target blocks publication until resolved. Reconcile uncertain writes by fetching current state before retrying, especially after an uncertain creation result.
+
+Use `pr` for descriptions, supplying the spec, tickets, complete diff, decisions, and actual validation evidence. Describe incomplete work honestly and retain spec/ticket closing references. Save generated bodies verbatim to temporary Markdown files and pass them with `--body-file`. Use explicit repository, base, and head arguments, including `<owner>:<head>` for forks. Push normally to the intended remote; resolve rejections without force-pushing. Verify the created PR is open and draft, with the intended repository, base, actual head repository/branch, and pushed SHA, and attach it in Codex when supported. Draft publication may precede the review gate; readiness may not. If a resumed PR is already ready but the implementation gate is unmet, convert it to draft and remove stale readiness status labels before continuing. Preserve unrelated metadata and non-status labels.
+
+### Readiness
+
+After the review gate passes, reuse validation only when verified evidence covers the exact current `HEAD`, both zero-finding review axes against the original pinned base, and every required check, with no uncommitted task changes. Honor requests for fresh checks and changes to required checks or validation environment. Missing or invalid evidence, or implementation changes during PR preparation, requires the full gate on the current SHA.
+
+Inspect the final description against the complete diff, spec, user constraints, report, actual validation evidence, and `pr` guidance. Reuse a correct description; otherwise invoke `pr` to prepare the final body and update only changed title/body values using `gh pr edit <pr-number> --repo <owner/repo> --title <title> --body-file <body-file>`. Push any remaining reviewed commits normally. Verify the remote head SHA equals the final reviewed SHA before marking the draft ready with `gh pr ready <pr-number> --repo <owner/repo>`.
+
+Ensure `status/ready-for-review` exists, creating it if missing while preserving existing label settings. Remove every other `status/` label and add `status/ready-for-review`, preserving non-status labels. Verify the open PR's URL, repository/head-repository identity, base, head branch/SHA, intended title/body and closing references, ready state, and labels with `gh pr view`, including `url,state,isDraft,baseRefName,headRefName,headRefOid,headRepository,headRepositoryOwner,title,body,labels`. The head SHA must equal the final reviewed SHA and the review-ready label must be the only status label.
+
+If a resumed PR already satisfies all these conditions with verified current validation, attach and return it without regenerating the description, rerunning checks, pushing, or editing GitHub. Otherwise repair only pending work. Attach the verified PR when supported. Delete temporary body files after success; preserve the prepared body and report the exact blocker on failure. Do not add PR entries to the implementation report or commit report changes after publication merely to record its URL.
 
 ## Implementation report
 
@@ -31,14 +63,14 @@ For a GitHub spec, fetch its authoritative issue number and URL. Create `docs/im
 
 Maintain one concise report containing:
 
-- Spec and ticket pointers, repository identity, integration branch, and original pinned base SHA for recovery.
+- Spec and ticket pointers, repository identity, absolute integration checkout path, integration branch, and original pinned base SHA for recovery.
 - A brief implementation summary, material decisions and tradeoffs, approved deviations with their approval source and scope, and limitations. State when there are no approved deviations; omit other empty categories.
-- Latest validation commands and results, skipped or incomplete checks, and the latest Standards and Spec review outcomes. Identify the commit each result covers; retain unresolved failures and disclose unavailable before evidence. Keep the final reviewed SHA in the returned result as described below.
+- Latest validation commands and results, skipped or incomplete checks, and the latest Standards and Spec review outcomes. Identify the commit each result covers; retain unresolved failures and disclose unavailable before evidence.
 - Pointers to relevant tests, commits, CI runs, or existing stable evidence URLs.
 
-Replace superseded check and review summaries rather than accumulating a round-by-round narrative or intermediate commit catalogue. Preserve material decisions, approvals, limitations, and unresolved findings across updates. Create additional evidence files only when required by the spec or repository instructions, or needed to substantiate a finding that existing references cannot establish. Keep routine raw logs and intermediate captures outside the committed report; retained evidence must exclude secrets and unrelated private material.
+Replace superseded check and review summaries rather than accumulating a round-by-round narrative or intermediate commit catalogue. Retain decisions, approvals, limitations, and unresolved findings. Create additional evidence files only when required by the spec or repository instructions, or needed to substantiate a finding that existing references cannot establish. Keep routine raw logs and intermediate captures outside the committed report; retained evidence must exclude secrets and unrelated private material.
 
-Create the report during implementation and update it before each review round's commit and checks so it is included in the full integration diff and review gate. Record blocked progress when possible without claiming completion. Keep the final reviewed SHA in the returned report rather than embedding a self-referential commit SHA in the Markdown. Return the report's absolute path to the caller.
+Create the report during implementation and update it before each review round's commit and checks so it is included in the full integration diff and review gate. Record blocked progress when possible. Return the report's absolute path and final reviewed SHA separately, avoiding a self-referential SHA in the committed Markdown.
 
 ## Issue status
 
@@ -48,9 +80,9 @@ Fetch the labels again and verify that `status/in-progress` is the only label st
 
 ## Review and fix
 
-Supply this replacement review-and-fix loop to `implement-spec`. Apply this check execution rule to implementation, integration, and fix workers:
+Apply this check execution rule to all workers:
 
-Run independent read-only checks concurrently when repository instructions permit and their outputs, ports, fixtures, and resources do not conflict. Preserve build-before-test dependencies, serialize suites sharing browser/server state, and avoid running a second build when a test command already builds. Await every command and retain its exit status and evidence; all required checks must pass before publication or gate completion.
+Run independent read-only checks concurrently when repository instructions permit and their outputs, ports, fixtures, and resources do not conflict. Preserve build-before-test dependencies, serialize suites sharing browser/server state, and avoid running a second build when a test command already builds. Await every command and retain its exit status and evidence; all required checks must pass before PR readiness or gate completion.
 
 1. Wait for all implementation and merge work to finish. Update the implementation report, then commit only the task's changes on the integration branch so the review includes them, preserving unrelated user changes. Record the integration `HEAD` SHA and run the repository's required checks.
 2. Invoke `code-review` against the original pinned base SHA, supplying the authoritative spec and tickets. Review the entire integration diff each round, including previous fixes. Preserve its independent Standards and Spec subagents and their separate reports.
@@ -63,4 +95,6 @@ There is no preset round limit. Continue while actionable work remains. If progr
 
 ## Finish
 
-After the gate passes, resume implementation finalization subject to the publication override above. Retain the reviewed integration branch and usable checkout for the caller; clean up only temporary implementation worktrees that are no longer needed. Report the implementation report path, checkout path, original pinned base SHA, integration branch, number of review rounds, final reviewed SHA, check results, material decisions and evidence pointers, and the zero-finding result for each axis. A blocked run must report its unresolved findings instead of claiming completion.
+After the gate passes, complete PR readiness and resume issue-tracker finalization, then release integration ownership as described above. Retain the reviewed integration branch and usable checkout for the caller; clean up only temporary implementation worktrees that are no longer needed. Report the verified PR URL, repository, base, head repository/branch and SHA, readiness state, implementation report path, checkout path, original pinned base SHA, integration branch, number of review rounds, final reviewed SHA, check results, material decisions and evidence pointers, and the zero-finding result for each axis. A blocked run must report its unresolved findings instead of claiming completion.
+
+When changing this workflow, evaluate the publication, draft PR, and integration worktree scenarios in [the shared offline behavior checks](../address-it/references/behavior-checks.md) without GitHub writes.

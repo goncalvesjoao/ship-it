@@ -59,13 +59,13 @@ Use the coordinator, monitoring reference, and resolver skill with each scenario
 | A legacy report contains a stale PR entry and a verified integration branch. | Resolve through GitHub using the branch and issue association, ignoring the stored PR entry. |
 | Caller supplies an explicit PR URL or a scheduled tick supplies a verified PR identity. | Bypass issue lookup, preserve supplied context and same-pass ownership, and continue the normal workflow. |
 | Numeric address-it input resolves a unique associated PR through GitHub. | Evaluate its feedback in one pass without schedules or merge-readiness decisions. |
-| pr-it publishes a reviewed implementation with a report. | Verify and return the published PR without adding a PR entry, committing a report update, or starting a post-publication implementation gate. |
-| pr-it receives a clean HEAD with exact-SHA passing checks and both zero-finding implementation reviews against the pinned base. | Reuse verified validation evidence without running the suite again. |
-| Validation evidence lacks an exact SHA, covers a different HEAD, has failed/incomplete checks, or omits a review axis for governed work. | Run required validation; governed work must pass the full implementation gate before publication. |
+| implement-it finalizes a reviewed implementation with a report. | Verify and return the published PR without adding a PR entry, committing a report update, or starting a post-publication implementation gate. |
+| implement-it resumes with a clean HEAD with exact-SHA passing checks and both zero-finding implementation reviews against the pinned base. | Reuse verified validation evidence without running the suite again. |
+| Validation evidence lacks an exact SHA, covers a different HEAD, has failed/incomplete checks, or omits a review axis for governed work. | Run required validation; governed work must pass the full implementation gate before PR readiness. |
 | The SHA matches but the user requests fresh checks, required checks change, or the validation environment changes. | Run fresh validation rather than relying on prior results. |
 | An existing PR matches the validated HEAD, target repositories/base/branch, intended description and closing references, requested draft state, and required label. | Attach and return the verified PR without regenerating its body, rerunning checks, or writing to GitHub. |
 | An existing PR has a stale description, different head SHA or draft state, or missing review label. | Continue with that PR and repair pending work; a label-only repair preserves its correct description and reused validation. |
-| PR preparation changes the implementation after validation. | Pass the full governed implementation gate on the new SHA before publication; prior results cannot authorize the changed HEAD. |
+| PR preparation changes the implementation after validation. | Pass the full governed implementation gate on the new SHA before PR readiness; prior results cannot authorize the changed HEAD. |
 | monitor-it receives an explicit PR URL or a verified caller/tick identity. | Coordinator passes the identity without fetching live PR state; worker verifies identity and current state before dependent writes. |
 | Delivery's publication worker returns verified PR metadata and SHA. | Parent compares returned identity/SHA with the intended target and local reviewed HEAD; monitoring worker checks live state without a duplicate parent fetch. |
 | A worker observes a different PR head or target from the supplied publication result. | Reconcile current state before dependent writes; prior publication evidence does not establish readiness on a changed head. |
@@ -83,3 +83,28 @@ Apply these scenarios to each Ship-it skill, including questions from upstream s
 | No structured question tool is available, or available tools prohibit this question type or mode. | Explain the tool limitation before asking in chat; preserve the existing answer or approval gate. |
 | A nested worker needs a user decision or approval. | Return the question, draft/options, and progress through parents to the user-facing coordinator. Coordinator uses the permitted structured tool or explains the fallback, then relays the actual answer and scope to the worker. |
 | A required question has no submitted answer, but time passes or an option is preselected. | Keep dependent work paused and continue only independent work; infer no answer or approval. |
+
+## Draft PR implementation
+
+| Scenario | Required outcome |
+| --- | --- |
+| First ticket merges while later tickets and checks remain incomplete. | Create or reuse one draft PR with honest progress and closing references. Do not apply readiness labels or close tickets early. |
+| Draft creation succeeds remotely but its response is lost. | Find and verify the existing PR before retrying; create no duplicate. |
+| Review finds issues or required checks fail after draft publication. | Keep the PR draft, preserve the work and report, and continue the fix loop. Draft publication does not satisfy the gate. |
+| Both review axes and required checks pass on the current clean HEAD. | Finalize the description, verify the remote SHA, mark ready, and verify the sole status label is status/ready-for-review. |
+| A resumed ready PR needs implementation changes. | Convert to draft, remove stale readiness statuses, and require the full gate on the changed SHA before restoring readiness. |
+| A resumed implementation report identifies a missing or conflicting integration branch. | Report a blocker; do not create a replacement branch or publish unrelated checkout contents. |
+
+## Integration worktree isolation
+
+| Scenario | Required outcome |
+| --- | --- |
+| Two sessions implement different specs from the same primary checkout. | Acquire separate spec ownership locks and use separate integration branches and worktrees. Preserve the primary checkout's branch, index, and files. |
+| Two sessions start the same spec before its report exists. | Atomic lock-directory creation admits one owner. The other reports the ownership conflict without issue, checkout, or PR writes. |
+| A run resumes with a report and an inactive prior owner. | Verify owner inactivity, acquire ownership, reconcile report and worktree identity, and reuse the dedicated checkout, branch, and original base. |
+| An owner appears old but its activity cannot be established. | Preserve its lock and work; report the blocker without takeover. |
+| Interruption occurs after worktree creation but before the first report. | Recover the spec, checkout, branch, and original base from the ownership record and Git state after verifying the old owner is inactive. Do not create a duplicate integration branch. |
+| A legacy integration branch is checked out in the primary checkout or another active worktree. | Report the conflict and preserve that checkout. Do not switch, reset, stash, or force-checkout its branch. |
+| The recorded dedicated worktree is gone, but its integration branch survives and is not checked out elsewhere. | After acquiring ownership, recreate a dedicated worktree on the existing branch without resetting it or choosing a new base. |
+| A merger inherits the primary checkout as its working directory. | Use the supplied absolute integration checkout and verify its repository/branch before merging. No primary-checkout mutation. |
+| A run finishes, blocks, or pauses with a nested writer still active. | Stop or await the writer before releasing ownership. Preserve the integration checkout and task work; retain the lock if inactivity cannot be verified. |
