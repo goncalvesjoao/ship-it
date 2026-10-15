@@ -43,6 +43,8 @@ For a resumed spec, find `docs/implementations/<spec-gh-issue-id>.md` and verify
 
 ## PR lifecycle
 
+For GitHub specs, prefix every created or updated PR title with `[ISSUE #<gh issue id>] ` using the authoritative spec issue number, not a child ticket number. For example, `[ISSUE #42] Add location search`. Keep exactly one issue prefix, replacing any stale prefix on resumed PRs, and verify it with the title on readback. For local specs without a GitHub issue, keep the title unprefixed.
+
 Before PR creation or updates, inspect the complete diff against the intended base and find any existing open PR for the actual head repository/branch and base in the target repository. Fetch and verify its URL, repository and head-repository identity, base, head branch/SHA, title, body, draft state, and labels. Reuse a matching PR. An ambiguous or conflicting target blocks publication until resolved. Reconcile uncertain writes by fetching current state before retrying, especially after an uncertain creation result.
 
 Use explicit repository, base, and head arguments, including `<owner>:<head>` for forks. Push normally to the intended remote; resolve rejections without force-pushing. Verify the created PR is open and draft, with the intended repository, base, actual head repository/branch, and pushed SHA, and attach it in Codex when supported. If a resumed PR is already ready but the implementation gate is unmet, convert it to draft and remove stale readiness status labels before continuing. Preserve unrelated metadata and non-status labels.
