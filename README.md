@@ -99,8 +99,7 @@ flowchart TD
     specIt["spec-it"] -.-> toSpec["to-spec"]
     ticketIt["ticket-it"] -.-> toTickets["to-tickets"]
 
-    implementation["implement-it"] -.->|1. Implement tickets and create the initial draft PR| implementSpec["implement-spec"]
-    implementSpec -.->|Review the full diff after each fix until both axes and checks pass| codeReview["code-review"]
+    implementation["implement-it"] -.->|1. Instructs a code-review/implementer cycle until no findings are left| implementSpec["implement-spec"]
     implementation -.->|2. Writes the final PR description and marks it as ready| pr["pr"]
     monitor["monitor-it"] -->|Dispatch a fresh worker, every 2 min to handle existing feedback| address["address-it"]
 ```
