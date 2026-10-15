@@ -10,14 +10,6 @@ Some of the utility skills are simple wrappers extending [Matt Pocock's skills](
 
 Start by discussing your idea or feature with your agent, and when you are ready, follow one of the workflows below.
 
-### Automated workflow
-
-1. On the same session as the discussion, invoke `plan-it` to turn it into a spec under a GitHub issue as well as sub-issues for each ticket in that spec.
-2. Invoke `implement-and-monitor-it #<gh-issue-id>`, to implement the spec until no review findings remain, open a PR, monitor it for feedback and apply justified fixes or hand it off for human review.
-
-> [!Note]
-> When the workflow finishes the PR is either labeled as `status/ready-for-review` for human review, `status/ready-for-merge` after the monitoring readiness gates pass, or `status/blocked` when work cannot proceed.
-
 ### Manual workflow
 
 1. On the same session as the discussion, invoke `spec-it` to turn it into a spec under a GitHub issue.
@@ -28,14 +20,17 @@ Start by discussing your idea or feature with your agent, and when you are ready
 > [!Note]
 > The `address-it` skill does not establish merge readiness. The PR will either be labeled with `status/ready-for-review`, or `status/blocked` when work cannot proceed. Invoke `monitor-it` for scheduled monitoring and its merge readiness gate.
 
-### Mixed workflow
+### Monitored workflow
 
 1. On the same session as the discussion, invoke `plan-it`, and wait for the GitHub issue to be created.
 2. On a new session, invoke `implement-it #<gh-issue-id>`, and wait for the implementation to finish.
 3. On a new session, invoke `monitor-it #<gh-issue-id>` to automatically monitor the PR for feedback review and apply justified fixes or hand it off for human review.
 
 > [!Tip]
-> We recommend this workflow, it has the right amount of automation while giving you a chance to intervene and review the code before starting PR monitoring.
+> Review the implementation result before starting monitoring. The skills recover implementation context from the report and PR, so implementation and monitoring can each run in a new session.
+
+> [!Note]
+> Monitoring leaves the PR labeled `status/ready-for-review` for human review, `status/ready-for-merge` after its readiness gates pass, or `status/blocked` when work cannot proceed.
 
 ---
 
@@ -88,7 +83,6 @@ Start by discussing your idea or feature with your agent, and when you are ready
 | [plan-it](skills/plan-it/SKILL.md) | Orchestration | Runs `spec-it` in the parent chat, then delegates `ticket-it` to a fresh subagent, relaying its questions and approvals through the parent chat. |
 | [spec-it](skills/spec-it/SKILL.md) | Utility | Invokes Matt Pocock's `to-spec` to publish a GitHub spec issue, adds `spec` if missing, and adds `status/todo` only when no `status/` label exists. |
 | [ticket-it](skills/ticket-it/SKILL.md) | Utility | Extends Matt Pocock's `to-tickets` to publish every ticket as a GitHub sub-issue of the spec's parent issue with the `ticket` label, adding `status/todo` only when no `status/` label exists. |
-| [implement-and-monitor-it](skills/implement-and-monitor-it/SKILL.md) | Orchestration | Delegates implementation and PR creation to one worker running `implement-it`, verifies its result, then starts `monitor-it`. |
 | [implement-it](skills/implement-it/SKILL.md) | Utility | Replaces GitHub spec and active ticket status labels with `status/in-progress` and extends Matt Pocock's `implement-spec` with repeated `code-review` and implementer fix rounds until both review axes report zero findings and required checks pass. Uses a dedicated integration worktree per spec, with exclusive session ownership. Creates an implementation report under `docs/implementations/<spec-gh-issue-id>.md`, opens a draft PR after the first ticket merge, and marks it ready after the gate passes. |
 | [monitor-it](skills/monitor-it/SKILL.md) | Orchestration | Monitors Copilot reviews every two minutes, invokes `address-it`, and updates the PR's status. Hands off for human review when Copilot is unused or not configured for the PR. |
 | [address-it](skills/address-it/SKILL.md) | Utility | Evaluates existing human or Copilot PR feedback, delegates justified fixes, validates and pushes them, and replies with evidence. Runs the same single pass for any caller; `monitor-it` keeps scheduling in the main chat and delegates monitoring decisions to a fresh worker. |
@@ -105,14 +99,10 @@ flowchart TD
     specIt["spec-it"] -.-> toSpec["to-spec"]
     ticketIt["ticket-it"] -.-> toTickets["to-tickets"]
 
-    deliver["implement-and-monitor-it"] -->|1. One subagent runs implement-it| implementWorker[["subagent"]]
-    implementWorker -->|1. Implement and pass the review gate| implementation["implement-it"]
-    deliver -->|2. Start the review process for the verified PR| monitor["monitor-it"]
-
-    implementation -.->|1. Opens a draft PR and adds a review and fix loop| implementSpec["implement-spec"]
+    implementation["implement-it"] -.->|Opens a draft PR and adds a review and fix loop| implementSpec["implement-spec"]
     implementSpec -.->|Review the full diff after each fix until both axes and checks pass| codeReview["code-review"]
     implementation -.->|Writes the draft and final PR description| pr["pr"]
-    monitor -->|Dispatch a fresh worker, every 2 min to handle existing feedback| address["address-it"]
+    monitor["monitor-it"] -->|Dispatch a fresh worker, every 2 min to handle existing feedback| address["address-it"]
 ```
 
 ### Their dependencies
@@ -127,7 +117,6 @@ When installing skills individually, install their dependencies too, the skills 
 | `implement-it` | None | `implement-spec`, `code-review`, `pr` |
 | `monitor-it` | `address-it` | None |
 | `address-it` | None | None |
-| `implement-and-monitor-it` | `implement-it`, `monitor-it`, `address-it` | `implement-spec`, `code-review`, `pr` |
 
 For example, install `monitor-it` with its resolver:
 
@@ -151,5 +140,5 @@ To mitigate this, all skills (apart from `plan-it` and `spec-it`) are setup in s
 | --- | --- | --- |
 | `plan-it`, `spec-it` | Idea/feature discussion | Skill must run on the same chat where the discussion took place |
 | `ticket-it` | Spec details | User invokes it with the spec's GitHub issue ID and the skill loads its body into context |
-| `implement-and-monitor-it`, `implement-it` | Spec and tickets details | User invokes it with the spec's GitHub issue ID, the skill loads into context, its body and body of the GitHub sub-issues for the tickets of the spec |
+| `implement-it` | Spec and tickets details | User invokes it with the spec's GitHub issue ID, the skill loads into context, its body and body of the GitHub sub-issues for the tickets of the spec |
 | `monitor-it`, `address-it` | Implementation and PR details | User invokes it with the spec's GitHub issue ID, the skill loads into context the implementation report created by `implement-it` and the PR body created by `implement-it` |
