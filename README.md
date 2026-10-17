@@ -44,11 +44,11 @@ Start by discussing your idea or feature with your agent, and when you are ready
 
 - Matt Pocock's skills, installed globally or in your project
   
-  ```sh
-  npx skills@latest -g add mattpocock/skills
-  ```
-  
-  We recommend installing these skills globally. To install them in your project, omit `-g`.
+```sh
+npx skills@latest add -g mattpocock/skills
+```
+
+We recommend installing these skills globally. To install them in your project, omit `-g`.
 
 - GitHub CLI (`gh`) installed. `setup-ship-it` selects existing stored credentials or isolated machine-user credentials.
 
@@ -65,8 +65,10 @@ Start by discussing your idea or feature with your agent, and when you are ready
 - Install the `goncalvesjoao/ship-it` skills
   
 ```sh
-npx skills@latest -g add goncalvesjoao/ship-it
+npx skills@latest add -g goncalvesjoao/ship-it
 ```
+
+We recommend installing these skills globally. To install them in your project, omit `-g`.
 
 - After installation, invoke `setup-ship-it` on your project before invoking any other skill.
 
