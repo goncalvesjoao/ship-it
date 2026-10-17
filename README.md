@@ -15,7 +15,7 @@ Start by discussing your idea or feature with your agent, and when you are ready
 1. On the same session as the discussion, invoke `spec-it` to turn it into a spec under a GitHub issue.
 2. Invoke `ticket-it #<gh-issue-id>` to create a sub-issue for each ticket in the spec.
 3. Invoke `implement-it #<gh-issue-id>` to implement the spec with a draft PR, then mark it ready with `status/ready-for-review` after both review axes and required checks pass.
-4. When PR feedback appears, invoke `address-it #<gh-issue-id>` to evaluate the feedback, apply justified fixes, and push them.
+4. When PR feedback appears, invoke `address-it #<gh-issue-id>` to evaluate the feedback, resolve merge conflicts with the base branch, apply justified fixes, and push them.
 
 > [!Note]
 > The `address-it` skill does not establish merge readiness. The PR will either be labeled with `status/ready-for-review`, or `status/blocked` when work cannot proceed. Invoke `monitor-it` for scheduled monitoring and its merge readiness gate.
@@ -85,7 +85,7 @@ Start by discussing your idea or feature with your agent, and when you are ready
 | [ticket-it](skills/ticket-it/SKILL.md) | Utility | Extends Matt Pocock's `to-tickets` to publish every ticket as a GitHub sub-issue of the spec's parent issue with the `ticket` label, adding `status/todo` only when no `status/` label exists. |
 | [implement-it](skills/implement-it/SKILL.md) | Utility | Replaces GitHub spec and active ticket status labels with `status/in-progress` and extends Matt Pocock's `implement-spec` with repeated `code-review` and implementer fix rounds until both review axes report zero findings and required checks pass. Uses a dedicated integration worktree per spec, with exclusive session ownership. Creates an implementation report under `docs/implementations/<spec-gh-issue-id>.md`, opens a draft PR after the first ticket merge, and marks it ready after the gate passes. |
 | [monitor-it](skills/monitor-it/SKILL.md) | Orchestration | Monitors Copilot reviews every two minutes, invokes `address-it`, and updates the PR's status. Hands off for human review when Copilot is unused or not configured for the PR. |
-| [address-it](skills/address-it/SKILL.md) | Utility | Evaluates existing human or Copilot PR feedback, delegates justified fixes, validates and pushes them, and replies with evidence. Runs the same single pass for any caller; `monitor-it` keeps scheduling in the main chat and delegates monitoring decisions to a fresh worker. |
+| [address-it](skills/address-it/SKILL.md) | Utility | Evaluates existing human or Copilot PR feedback and checks for merge conflicts, delegates fixes and conflict resolution, validates and pushes them, and replies with evidence. Runs the same single pass for any caller; `monitor-it` keeps scheduling in the main chat and delegates monitoring decisions to a fresh worker. |
 
 ### How they relate to each other
 
