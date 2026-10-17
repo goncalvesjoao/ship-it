@@ -4,7 +4,7 @@ Use the coordinator, monitoring reference, and resolver skill with each scenario
 
 | Scenario | Required outcome |
 | --- | --- |
-| Current-head Copilot review is `COMMENTED`, submitted, and has zero findings. All other readiness conditions pass. | Apply `status/ready-for-merge`, assign the author if unassigned, record the ready SHA, disable monitoring. |
+| Current-head Copilot review is `COMMENTED`, submitted, and has zero findings. All other readiness conditions pass. | Apply `status/ready-for-merge`, use the configured human reviewer for machine-authored PRs, otherwise assign the author if unassigned; record the ready SHA, disable monitoring. |
 | Copilot monitoring is enabled. PR was created 31 minutes ago, has no review or findings, and no independent work remains. | Apply `status/blocked`, explain the review timeout, disable monitoring. Do not create a request that silently resets the expired creation deadline. |
 | Current-head review passes, but required CI has been pending for 31 minutes with no documented duration. | Apply `status/blocked`, explain the stalled check and next action as needed, disable monitoring. |
 | A push succeeded but the process stopped before recording success. The remote contains the intended commit. | Reconcile the intended write, verify the remote SHA, mark the fix handled, and evaluate/request review. Do not recreate the fix or push a duplicate commit. |
@@ -22,7 +22,7 @@ Use the coordinator, monitoring reference, and resolver skill with each scenario
 | A justified finding is ready for implementation with `status/ready-for-review` applied. | Replace it with `status/in-progress` and verify the transition before dispatching the implementer. |
 | The implementer finishes; resolver validation passes, fixes are pushed, and GitHub confirms the new head SHA. | Replace `status/in-progress` with `status/ready-for-review`, verify it is the only status label, and continue waiting for current-head review. |
 | The implementer finishes locally, but validation fails or the push is unverified. | Keep implementation pending, do not apply `status/ready-for-review`, and continue useful work or follow the blocked handoff. |
-| User does not use Copilot; PR is open with no review. | Apply and verify `status/ready-for-review`, create no schedule or review request, report human-review handoff. |
+| User does not use Copilot; PR is open with no review. | Apply and verify `status/ready-for-review`, create no schedule or Copilot request, verify any configured human reviewer handoff. |
 | Repository configuration disables Copilot review for this PR; a matching monitor exists. | Apply and verify `status/ready-for-review`, disable and verify the matching monitor, create no replacement. |
 | No Copilot review exists and configuration is inaccessible; user preference is unknown. | Ask which review mode to use, leave scheduling inactive. Do not infer disabled review or apply a terminal status. |
 | Automatic Copilot review is disabled, but user explicitly requests Copilot monitoring. | Run the monitoring cycle, request review through the supported mechanism, schedule only if useful work or a bounded wait remains. |
@@ -113,3 +113,15 @@ Apply these scenarios to each Ship-it skill, including questions from upstream s
 | The checkout contains unrelated edits or another in-progress merge. | Preserve the checkout and use an isolated clean checkout of the verified PR head for the conflict check and resolution. |
 | One conflict requires a product decision while another finding is independently fixable. | Preserve unresolved merge work, complete the independent fix in a clean checkout, validate and verify its push, and report the decision blocker. Do not publish an unfinished merge. |
 | Conflict resolution passes, but the base advances after validation. | Report the new base SHA and conflict status as outstanding for another pass; do not claim the earlier merge check covers the new base. |
+
+## Repository identity
+
+| Scenario | Required outcome |
+| --- | --- |
+| A fresh ticketing, implementation, merger, PR, or nested fix worker has no inherited shell environment. | Receive the identity reference, policy and checkout pointers, resolve the helper through its own common directory, and run each gh/Git operation with the policy account. |
+| A scheduled tick resumes on a different machine without local setup, or its saved login disagrees with current policy. | Stop affected access/writes without a human fallback, preserve work, pause monitoring, and report the local setup blocker without attempting a GitHub label/comment. |
+| Machine-authored PR reaches implementation readiness, human-review handoff, or merge readiness. | Verify a request to or existing review from the configured human reviewer; assign that human only if assignment is needed and empty. Never assign the machine author. Missing eligibility leaves handoff incomplete. |
+| Setup is rerun with complete unchanged Matt configuration and a working local helper. | Preserve tracker/triage/domain choices and credentials, ask no settled decisions again, verify read-only access, and make no duplicate policy blocks. |
+| Matt setup configuration needs updating. | Invoke the installed upstream workflow, retain its draft and approval gates, and preserve unrelated choices. |
+
+| New setup has one existing personal gh account and no assistant account. | Recommend existing-account mode, reuse its stored credentials and confirmed Git identity, require no separate account, token file, or reviewer, and preserve setup approval gates. |

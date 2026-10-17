@@ -1,0 +1,59 @@
+---
+name: setup-ship-it
+description: Configure a repository for Ship-it, reusing Matt Pocock's setup and optionally isolating a dedicated GitHub machine user's authentication and commit identity.
+metadata:
+  dependency: "setup-matt-pocock-skills"
+---
+
+# Setup Ship-it
+
+Configure the current repository only when invoked for setup. Editing this skill does not configure the development machine. Read [the user question rules](references/user-questions.md) before questions. Never create an account or request secrets in chat.
+
+## Inspect and decide
+
+Read repository instructions, `docs/agents/*.md`, Git remotes including push URLs, existing local Ship-it setup, and the installed `setup-matt-pocock-skills` skill and templates. Inspect Git's common directory, worktrees, authentication-related Git settings, and available `gh` accounts without printing tokens or credential-bearing URLs/configuration. Account names and sanitized remote hosts are sufficient. Preserve existing policy, tracker, labels, domain layout, reviewer, and authentication choices on reruns. Ask only for unresolved decisions or requested changes.
+
+If issue-tracker, triage-label, or domain configuration is missing or needs updating, invoke the installed `setup-matt-pocock-skills` using the Skill tool when available, otherwise read and follow it. Preserve its findings, question sequence, draft approval, instruction-file selection, and existing user choices. Do not copy its templates or implement a second setup workflow. If unavailable, report the prerequisite. Ship-it publication skills require GitHub; preserve a chosen alternative tracker and explain that limitation instead of switching it.
+
+Default new setups to the user's existing personal GitHub account and stored `gh` credentials. A separate assistant account is optional; offer machine-account isolation only as an opt-in, and preserve that choice on reruns. Resolve the expected login from existing policy and account inspection, asking only when ambiguous. Personal-account setup requires neither a new account nor a separate token file or human reviewer. For a machine account, also resolve a human reviewer distinct from the machine login and explicit commit name/email. Use an account-owned verified email or its GitHub noreply address, never infer the human's email. Existing-account mode can reuse the user's confirmed effective Git identity. Ask for missing values together. Account creation, permission grants, or credential provisioning remain human tasks outside this skill; continue preparing a reviewable setup while those are missing.
+
+## Prepare and approve
+
+Show a concrete draft of the repository policy and local file locations before editing. Preserve Matt's independent approval requirements. Configuration approval does not authorize test issues/PRs, account creation, global Git changes, `gh auth switch`, `gh auth setup-git`, or modification of shared remotes.
+
+Use one locator on every machine: `<absolute-git-common-dir>/ship-it/run` with sibling `config.json`. Resolve the common directory using `git rev-parse --path-format=absolute --git-common-dir`. Linked worktrees share it; independent clones provision it separately. Keep these files and credentials outside the working tree. Check that the common directory is not tracked or inside a tracked nested repository. Use private directories and files, and never stage local setup.
+
+Install [scripts/run.py](scripts/run.py) there as executable `run`, using Python 3. Its sibling JSON contains only:
+
+```json
+{
+  "mode": "existing",
+  "account": "expected-login",
+  "name": "Confirmed commit name",
+  "email": "confirmed-account-email"
+}
+```
+
+The example uses the personal-account workflow. For `existing` mode omit `token_file`; the helper captures the named account's stored token through `gh auth token --user`, ignoring ambient token variables. It does not switch or update the active account. If that account has no stored credential, report provisioning needed rather than silently using an environment token.
+
+For `machine` mode set `mode` to `machine` and add `token_file` with the absolute private token-file path. The human provisions an account token in a private absolute file outside all checkouts, mode 600, using a secure local terminal or secret manager. Never ask them to paste it into chat or run a command that prints it. Choose only the repository access/permissions needed for the selected workflow, including its issues, PRs, labels, review requests, and Git pushes. Explain any organization approval/SSO requirement discovered during verification. The helper uses that file directly with a temporary isolated `GH_CONFIG_DIR`; there is no persistent `gh` login to alter. Do not overwrite an existing token or local configuration on rerun. Compare non-secret settings, propose only necessary changes, and replace approved config atomically.
+
+The helper applies author and committer identity and Git credential settings per process, including child Git processes. Standard `https://github.com/owner/repo.git`, `git@github.com:owner/repo.git`, and `ssh://git@github.com/owner/repo.git` remotes work without edits: SSH URLs are translated to HTTPS only during that command. Inspect both fetch and push targets. SSH aliases, custom ports, custom URL rewrite rules, credential-bearing URLs, and Enterprise hosts require a separately reviewed extension; stop affected setup rather than changing remotes or falling back to SSH. Do not certify them as supported.
+
+## Record and verify
+
+Append/update a single Ship-it identity section in `docs/agents/issue-tracker.md`, preserving Matt's tracker policy and unrelated edits. Record:
+
+- Mode and expected GitHub account, plus human reviewer for machine mode.
+- Confirmed commit identity and the supported GitHub host/repository.
+- Helper locator relative to Git's common directory, command prefix, and instruction to reload policy on every run.
+- Local provisioning on each machine/independent clone; credentials and absolute machine paths stay untracked.
+- Missing local setup or identity mismatch stops GitHub access and Git writes/network operations, with no fallback to another account. The configured personal account is valid in existing-account mode. Local inspection/drafting may continue; monitoring must pause and report the blocker without unauthenticated GitHub writes.
+
+In the existing agent instruction file selected by Matt's workflow, add/update one pointer requiring all Ship-it commands, delegated/nested workers, resumed runs, and scheduled ticks to read that policy. Use [the shared identity instructions](references/github-identity.md) for the full execution and reviewer rules. If no instruction file exists and Matt's setup has not selected one, ask which to create.
+
+After approval and local provisioning, run the installed helper from the repository with `--account <expected-login> gh api --hostname github.com user --jq .login`. Check effective author/committer using wrapped `git var GIT_AUTHOR_IDENT` and `git var GIT_COMMITTER_IDENT`. Verify repository access with wrapped read-only `gh repo view <owner/repo> --json nameWithOwner,viewerPermission`. Use wrapped `git ls-remote <existing-remote>` for fetch authentication, with no remote/config changes. A public read alone does not prove push permission. Do not publish test issues/PRs or push test commits. When a human reviewer is configured, verify they can review this repository through read-only API evidence; if eligibility/access cannot be established, leave that validation pending.
+
+Report files changed, verified login/commit identity, supported remotes, and any incomplete provisioning or permission verification. Distinguish local simulated checks from live read-only GitHub evidence. Missing credentials leave setup prepared but unverified; never claim ready. Reruns reuse approved settings and repair only missing or explicitly changed pieces.
+
+The helper uses the documented [GitHub CLI environment precedence](https://cli.github.com/manual/gh_help_environment) and [Git credential helper protocol](https://git-scm.com/docs/gitcredentials).

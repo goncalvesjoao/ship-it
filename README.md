@@ -50,7 +50,7 @@ Start by discussing your idea or feature with your agent, and when you are ready
   
   We recommend installing these skills globally. To install them in your project, omit `-g`.
 
-- GitHub CLI (`gh`) installed and authenticated
+- GitHub CLI (`gh`) installed. `setup-ship-it` selects existing stored credentials or isolated machine-user credentials.
 
   ```sh
   brew install gh
@@ -58,28 +58,23 @@ Start by discussing your idea or feature with your agent, and when you are ready
   
   See [GitHub CLI installation instructions](https://cli.github.com/) for platforms other than macOS.
   
-  ```sh
-  gh auth login
-  ```
-
 - An agent tool that supports subagents and scheduling.
 
 ## Setup
 
-- Run `setup-matt-pocock-skills` first, invoke it in your project if you haven't already.
-
 - Install the `goncalvesjoao/ship-it` skills
   
-  ```sh
-  npx skills@latest add goncalvesjoao/ship-it
-  ```
-  
-  We recommend installing these skills locally in your project so you can tinker with them. To install them globally, add `-g`.
+```sh
+npx skills@latest -g add goncalvesjoao/ship-it
+```
+
+- After installation, invoke `setup-ship-it` on your project before invoking any other skill.
 
 ## The skills
 
 | Skill | Type | Description |
 | --- | --- | --- |
+| [setup-ship-it](skills/setup-ship-it/SKILL.md) | Setup | Configures repository policy and optional machine-user isolation, reusing Matt Pocock's setup. |
 | [plan-it](skills/plan-it/SKILL.md) | Orchestration | Runs `spec-it` in the parent chat, then delegates `ticket-it` to a fresh subagent, relaying its questions and approvals through the parent chat. |
 | [spec-it](skills/spec-it/SKILL.md) | Utility | Invokes Matt Pocock's `to-spec` to publish a GitHub spec issue, adds `spec` if missing, and adds `status/todo` only when no `status/` label exists. |
 | [ticket-it](skills/ticket-it/SKILL.md) | Utility | Extends Matt Pocock's `to-tickets` to publish every ticket as a GitHub sub-issue of the spec's parent issue with the `ticket` label, adding `status/todo` only when no `status/` label exists. |
@@ -110,6 +105,7 @@ When installing skills individually, install their dependencies too, the skills 
 
 | Skill | Required skills from this repository | Required skills from `mattpocock/skills` |
 | --- | --- | --- |
+| `setup-ship-it` | None | `setup-matt-pocock-skills` |
 | `plan-it` | `spec-it`, `ticket-it` | `to-spec`, `to-tickets` |
 | `spec-it` | None | `to-spec` |
 | `ticket-it` | None | `to-tickets` |

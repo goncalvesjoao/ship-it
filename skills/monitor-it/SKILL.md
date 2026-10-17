@@ -5,6 +5,10 @@ description: "Hand off an open GitHub PR for human review when Copilot review is
 
 # Monitor it
 
+## Repository identity
+
+Before GitHub access, Git writes/network operations, delegation, or scheduling, read and follow [the shared identity instructions](references/github-identity.md). Apply them to invoked upstream skills and every worker.
+
 ## User questions
 
 Before asking or relaying any user question, read and follow [the user question rules](references/user-questions.md).
