@@ -8,7 +8,7 @@ Receive PR identity, absolute project/checkout and ledger paths when known, abso
 
 For scheduled ticks, verify the automation is active and matches the ledger ID before PR writes. Stopped, deleted, superseded, or unverifiable schedules return skipped without PR writes. Explicit start/resume permits an initial cycle while scheduling is inactive. Check the supplied cancellation condition before every external mutation; preserve local work and return if authorization is revoked.
 
-Read repository instructions and [the shared identity instructions](github-identity.md); reload current tracker policy and resolve the helper in this checkout before GitHub access. Forward the identity contract to the resolver and all nested workers. For monitored work, recover the supplied ledger or derive `<git-common-dir>/address-it/<owner>/<repo>/<PR-number>.json` from the absolute Git common directory. Preserve finding evidence, pending operations, automation ID, wait deadlines, and retry history. Before the first monitored mutation, use atomic directory creation at `<ledger-path>.lock` for exclusive PR ownership; reconcile interrupted writes and verify the previous owner is inactive before stale-lock takeover. Release only your own lock on exit. If ownership is occupied/unverifiable, return skipped conflict without PR writes. The unused-Copilot handoff may verify writes directly without checkout/ledger, but must first verify no resolving pass owns the PR.
+Read repository instructions and [the shared identity instructions](github-identity.md); reload current tracker policy and resolve the helper in this checkout before GitHub access. Forward the identity contract to the resolver and all nested workers. For monitored work, recover the supplied ledger or derive `<git-common-dir>/address-it/<owner>/<repo>/<PR-number>.json` from the absolute Git common directory. Preserve finding evidence, pending operations, automation ID, wait deadlines, and retry history. Before the first monitored mutation, use atomic directory creation at `<ledger-path>.lock` for exclusive PR ownership; reconcile interrupted writes and verify the previous owner is inactive before stale-lock takeover. Release only your own lock on exit. If ownership is occupied/unverifiable, return skipped conflict without PR writes.
 
 Load current human decisions from the ledger before assessing review mode or dispatching the resolver. Apply each answer only within its recorded scope; later recorded answers supersede older prompt snapshots. Pass the effective constraints, review preference, and scoped authorization to the resolver and preserve the decision records through ledger updates. If recorded decisions cannot be recovered or conflict without a clear supersession, pause affected work and return the limitation or question to the coordinator.
 
@@ -18,13 +18,13 @@ Recover supplied implementation context from the ledger before resolving feedbac
 
 ## Entry and review mode
 
-Verify the supplied PR identity and fetch open state, head, labels, and Copilot review configuration/activity in this worker. Compare supplied expected repository/base/head identity and SHA when present; reconcile mismatches before dependent writes. For closed or merged PRs, return the terminal state. Determine whether Copilot review is in use from user preference, accessible configuration, and actual review activity/requests. Explicit Copilot opt-in permits monitoring even when automatic review is disabled. A missing review alone does not establish that Copilot is unused. If unknown, return the review-mode question and request inactive scheduling until answered. Fetch failures remain unknown state under Recovery and waits.
+Verify the supplied PR identity and fetch open state, head, and labels in this worker. Inspect Copilot configuration/activity when needed to determine review mode or verify enabled review; a saved opt-out requires no Copilot configuration fetch. Compare supplied expected repository/base/head identity and SHA when present; reconcile mismatches before dependent writes. For closed or merged PRs, return the terminal state. Determine whether Copilot review is in use from the saved repository `copilot_review` choice, scoped human decisions, accessible configuration, and actual review activity/requests. An explicit saved choice takes precedence over inferred activity; a later scoped human decision may override it. Explicit Copilot opt-in permits monitoring even when automatic review is disabled. A missing review alone does not establish that Copilot is unused. If unknown, return the review-mode question and request inactive scheduling until answered. Fetch failures remain unknown state under Recovery and waits.
 
-If Copilot is unused or not configured for this PR, apply and verify `status/ready-for-review` using Status labels, verify the PR remains open, complete the configured human reviewer handoff under the shared identity instructions, and return its verified result for coordinator shutdown. This branch needs the configured local checkout/helper but no ledger or resolver pass. Use `address-it` when the user asks to address existing feedback.
+If Copilot is explicitly disabled, continue through resolution and readiness with the same ledger and ownership rules, skipping Copilot requests and its completion gate. If opted-in review is unavailable, finish independent work and use Blocked handoff. Human review requests occur only at merge readiness or a blocked handoff.
 
 ## Resolve and assess
 
-For Copilot monitoring, read and invoke the supplied `address-it` skill within this worker. This same worker retains ownership across resolution and subsequent readiness mutations; the resolver may dispatch one implementer. Pass the PR identity, project/checkout and ledger paths, spec pointers, constraints, authorization, and cancellation condition. Request all feedback, not a reviewer-limited scope. Missing, interrupted, scoped, or incomplete results cannot satisfy readiness.
+Read and invoke the supplied `address-it` skill within this worker. This same worker retains ownership across resolution and subsequent readiness mutations; the resolver may dispatch one implementer. Pass the PR identity, project/checkout and ledger paths, spec pointers, constraints, authorization, and cancellation condition. Request all feedback, not a reviewer-limited scope. Missing, interrupted, scoped, or incomplete results cannot satisfy readiness.
 
 Keep PR feedback, code inspection, implementation logs, and validation here. Reconcile pending writes rather than recreating fixes. Record verified push times for updated-head waits; evaluate/request updated-head review on the next cycle after a fix push. Finish independent justified fixes before escalating human decisions or other blockers. Return human questions, including those from the resolver or its implementer, once through the coordinator with the relevant draft/options and progress. The coordinator reads and follows [the user question rules](user-questions.md); keep dependent work paused and preserve independent progress.
 
@@ -32,7 +32,7 @@ Evaluate review completion, recovery, and readiness every cycle, including cycle
 
 ## Review completion
 
-On the first cycle and each new head, inspect automatic review activity, pending requests, and submitted reviews. If none applies and the deadline has not expired, request Copilot review through the supported mechanism, once per head SHA. A comment mentioning Copilot is not a request. An explicit post-timeout resume permits one new request for that same head in the resumed run if none is pending/completed. Confirmed unused/disabled review follows Entry and review mode; other access/capability failures follow Recovery.
+On the first cycle and each new head, inspect automatic review activity, pending requests, and submitted reviews. If none applies and the deadline has not expired, request Copilot review through the supported mechanism, once per head SHA. A comment mentioning Copilot is not a request. An explicit post-timeout resume permits one new request for that same head in the resumed run if none is pending/completed. Explicitly disabled review skips this gate; other access/capability failures follow Recovery.
 
 A completed review requires author `copilot-pull-request-reviewer[bot]`, populated `submitted_at`, current-head `commit_id`, and state `COMMENTED`, `APPROVED`, or `CHANGES_REQUESTED`. A zero-finding `COMMENTED` review qualifies. Missing, older-head, dismissed, pending, or error-only reviews do not.
 
@@ -46,7 +46,7 @@ An expired review wait requires Blocked handoff and one comment explaining the m
 
 ## Status labels
 
-Before any status transition, read and follow [the resolver's Status labels procedure](../../address-it/SKILL.md#status-labels), including for the unused-Copilot handoff without invoking a resolver pass. Uncertain/failed transitions remain pending under Recovery and waits.
+Before any status transition, read and follow [the resolver's Status labels procedure](../../address-it/SKILL.md#status-labels). Uncertain/failed transitions remain pending under Recovery and waits.
 
 ## Recovery and waits
 
@@ -60,13 +60,13 @@ Network/server failures allow **three consecutive failed cycles**, persisted acr
 
 Finish independent justified fixes before handing off, using the resolver when possible. A blocker exists when no autonomous action or bounded wait can resolve remaining work, including exhausted retries, unavailable access/scheduling/resolution channels, required human decisions/approvals, contradictory feedback, or expired waits. Progressing reviews/checks within deadlines and fixable failures remain active work.
 
-Apply `status/blocked` using Status labels. Leave one explanatory comment if the reason/next action is not clear from existing discussion; review timeouts always require their comment. Record outstanding findings, head SHA, and handoff reason, then return blocked for coordinator shutdown. Report unverified writes explicitly.
+Apply `status/blocked` using Status labels. Leave one explanatory comment if the reason/next action is not clear from existing discussion; review timeouts always require their comment. Complete and verify the configured human reviewer handoff under the shared identity instructions. Record outstanding findings, head SHA, and handoff reason, then return blocked for coordinator shutdown. Report unverified writes explicitly.
 
 ## Finish
 
 A fresh complete fetch must confirm:
 
-- A completed current-head Copilot review under Review completion.
+- A completed current-head Copilot review under Review completion when Copilot is enabled.
 - Every finding has an evidenced disposition; fixes are pushed and validated.
 - All review conversations are resolved; findings outside threads have explicit closure or reviewer acknowledgment.
 - Required checks pass; no active changes-requested review or pending reviewer request remains.
@@ -77,9 +77,9 @@ Recheck head/review state immediately before applying `status/ready-for-merge`. 
 
 ## Return compact result
 
-Persist the cycle result and detailed evidence in the ledger when one is required. The unused-Copilot handoff and closed/merged branch may return without creating a ledger. Return only:
+Persist the cycle result and detailed evidence in the ledger when one is required. The closed/merged branch may return without creating a ledger. Return only:
 
-- Outcome: active, ready for human review, ready for merge, blocked, closed/merged, needs review-mode decision, skipped inactive, or skipped ownership conflict.
+- Outcome: active, ready for merge, blocked, closed/merged, needs review-mode decision, skipped inactive, or skipped ownership conflict.
 - PR URL, checkout/ledger paths, observed/verified head SHA, verified changes this cycle, and unverified operations.
 - Whether another tick is needed, any preserved deadline/retry-after time, and required human question/action.
 

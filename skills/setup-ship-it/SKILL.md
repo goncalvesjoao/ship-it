@@ -17,6 +17,12 @@ If issue-tracker, triage-label, or domain configuration is missing or needs upda
 
 Default new setups to the user's existing personal GitHub account and stored `gh` credentials. A separate assistant account is optional; offer machine-account isolation only as an opt-in, and preserve that choice on reruns. Resolve the expected login from existing policy and account inspection, asking only when ambiguous. Personal-account setup requires neither a new account nor a separate token file or human reviewer. For a machine account, also resolve a human reviewer distinct from the machine login and explicit commit name/email. Use an account-owned verified email or its GitHub noreply address, never infer the human's email. Existing-account mode can reuse the user's confirmed effective Git identity. Account creation, permission grants, or credential provisioning remain human tasks outside this skill; continue preparing a reviewable setup while those are missing.
 
+### Choose PR review mode
+
+Ask "Do you want GitHub Copilot to review PRs?" with Yes and No options when no choice is recorded. Use the shared user question rules and wait for the answer. Preserve the saved choice on reruns unless the user requests a change. Record `copilot_review: true` or `copilot_review: false` in the repository policy, not the authentication helper config. Opt-in authorizes Copilot review requests during the PR workflow; it does not configure GitHub automatic review.
+
+Explain that human review requests happen only at `status/ready-for-merge` or `status/blocked`. With Copilot off, monitoring still resolves existing feedback and checks readiness, skipping only the Copilot gate. Required human approvals that prevent merge readiness cause a blocked handoff after independent work finishes.
+
 ### Collect machine-account details
 
 Only enter this sequence after the user chooses machine-account mode. Use the structured question tool under the shared user question rules. Ask one missing field per question, wait for its answer, then continue; skip fields already established by inspection or prior answers. Do not ask for a combined paragraph or JSON configuration.
@@ -75,6 +81,7 @@ The helper applies author and committer identity and Git credential settings per
 Append/update a single Ship-it identity section in `docs/agents/issue-tracker.md`, preserving Matt's tracker policy and unrelated edits. Record:
 
 - Mode and expected GitHub account, plus authentication method and human reviewer for machine mode.
+- The explicit `copilot_review` choice and human handoff timing under the shared identity instructions.
 - Confirmed commit identity and the supported GitHub host/repository.
 - Helper locator relative to Git's common directory, command prefix, and instruction to reload policy on every run.
 - Local provisioning on each machine/independent clone; credentials and absolute machine paths stay untracked.

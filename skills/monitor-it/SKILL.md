@@ -1,6 +1,6 @@
 ---
 name: monitor-it
-description: "Hand off an open GitHub PR for human review when Copilot review is unused or disabled; otherwise monitor every two minutes, evaluate findings against the code and spec, delegate justified fixes, and mark it ready for merge when its gates pass."
+description: "Monitor an open GitHub PR every two minutes, optionally use Copilot review, resolve feedback, and request human review only when ready for merge or blocked."
 ---
 
 # Monitor it
@@ -13,7 +13,7 @@ Before GitHub access, Git writes/network operations, delegation, or scheduling, 
 
 Before asking or relaying any user question, read and follow [the user question rules](references/user-questions.md).
 
-Requires authenticated GitHub CLI (`gh`). Copilot monitoring also requires access to the PR's head repository and monitoring-worker and nested implementer subagent support. Accept a spec issue number or an explicit PR URL. Invocation authorizes the scheduled checks, scoped fixes, normal pushes to the PR's head branch, review requests and replies, labels, and assignment described here and in the monitoring workflow. Creating or editing this skill does not authorize execution. Merging is not authorized.
+Requires authenticated GitHub CLI (`gh`). Monitoring also requires access to the PR's head repository and monitoring-worker and nested implementer subagent support. Accept a spec issue number or an explicit PR URL. Invocation authorizes the scheduled checks, scoped fixes, normal pushes to the PR's head branch, review requests and replies, labels, and assignment described here and in the monitoring workflow. Creating or editing this skill does not authorize execution. Merging is not authorized.
 
 ## Dispatch one cycle
 
@@ -41,7 +41,7 @@ Skipped ownership conflicts leave scheduling unchanged for the next tick. Honor 
 
 ## Stop and report
 
-On ready for human review, ready for merge, blocked, closed/merged, needs review-mode decision, or user stop, disable every matching monitor and verify inactivity. On user stop, interrupt the active worker and its implementer before shutdown, preserving ledger, branch, and unpublished work. Report shutdown failures; unverifiable terminal writes or shutdown prevent claiming completed handoff/readiness. Resume only through Schedule and lifecycle.
+On ready for merge, blocked, closed/merged, needs review-mode decision, or user stop, disable every matching monitor and verify inactivity. On user stop, interrupt the active worker and its implementer before shutdown, preserving ledger, branch, and unpublished work. Report shutdown failures; unverifiable terminal writes or shutdown prevent claiming completed handoff/readiness. Resume only through Schedule and lifecycle.
 
 Report the compact verified outcome, PR URL/head SHA, meaningful changes, and required action. Active monitoring is incomplete delivery. Stay quiet while state is unchanged/non-actionable; notify on verified pushes, readiness/handoff, closure/merge, new failures, or required decisions. Report unchanged blockers once. Keep detailed evidence in the ledger rather than rereading it into this chat.
 
