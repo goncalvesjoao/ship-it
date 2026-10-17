@@ -83,6 +83,7 @@ We recommend installing these skills globally. To install them in your project, 
 | [implement-it](skills/implement-it/SKILL.md) | Utility | Replaces GitHub spec and active ticket status labels with `status/in-progress` and extends Matt Pocock's `implement-spec` with repeated `code-review` and implementer fix rounds until both review axes report zero findings and required checks pass. Uses a dedicated integration worktree per spec, with exclusive session ownership. Creates an implementation report under `docs/implementations/<spec-gh-issue-id>.md`, opens a draft PR after the first ticket merge, and marks it ready after the gate passes. |
 | [monitor-it](skills/monitor-it/SKILL.md) | Orchestration | Monitors PRs every two minutes with optional Copilot review, invokes `address-it`, and requests human review when ready for merge or blocked. |
 | [address-it](skills/address-it/SKILL.md) | Utility | Evaluates existing human or Copilot PR feedback and checks for merge conflicts, delegates fixes and conflict resolution, validates and pushes them, and replies with evidence. Runs the same single pass for any caller; `monitor-it` keeps scheduling in the main chat and delegates monitoring decisions to a fresh worker. |
+| [reconcile-issues](skills/reconcile-issues/SKILL.md) | Utility | Finds open issues whose requirements are already complete, verifies merged work and acceptance evidence, and closes them as completed. Leaves partial or ambiguous issues open. |
 
 ### How they relate to each other
 
@@ -114,6 +115,7 @@ When installing skills individually, install their dependencies too, the skills 
 | `implement-it` | None | `implement-spec`, `code-review`, `pr` |
 | `monitor-it` | `address-it` | None |
 | `address-it` | None | None |
+| `reconcile-issues` | None | None |
 
 For example, install `monitor-it` with its resolver:
 
@@ -139,3 +141,4 @@ To mitigate this, all skills (apart from `plan-it` and `spec-it`) are setup in s
 | `ticket-it` | Spec details | User invokes it with the spec's GitHub issue ID and the skill loads its body into context |
 | `implement-it` | Spec and tickets details | User invokes it with the spec's GitHub issue ID, the skill loads into context, its body and body of the GitHub sub-issues for the tickets of the spec |
 | `monitor-it`, `address-it` | Implementation and PR details | User invokes it with the spec's GitHub issue ID, the skill loads into context the implementation report created by `implement-it` and the PR body created by `implement-it` |
+| `reconcile-issues` | Issue requirements and completion evidence | Loads open issues, comments, linked PRs, native sub-issues, and relevant completion reports from the target repository |
