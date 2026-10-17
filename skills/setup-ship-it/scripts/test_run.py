@@ -26,6 +26,12 @@ from pathlib import Path
 if sys.argv[1:3] == ['auth', 'token']:
     assert '--user' in sys.argv and 'robot' in sys.argv
     assert 'GH_TOKEN' not in os.environ
+    assert 'GITHUB_TOKEN' not in os.environ
+    if os.environ.get('EXPECTED_GH_DIR'):
+        assert os.environ['GH_CONFIG_DIR'] == os.environ['EXPECTED_GH_DIR']
+        if os.environ.get('FAKE_TOKEN_FAIL'):
+            sys.exit(1)
+        assert (Path(os.environ['GH_CONFIG_DIR']) / 'hosts.yml').read_text() == 'simulated-login-config'
     print('simulated-token')
 elif sys.argv[1:2] == ['api'] and 'user' in sys.argv:
     if os.environ.get('FAKE_FAIL'):
@@ -141,6 +147,60 @@ else:
             self.assertNotEqual(result.returncode, 0)
             self.assertFalse((self.root / 'executed').exists())
             self.assertNotIn('secret', result.stderr)
+
+    def configure_gh_login(self):
+        gh_dir = self.install / 'gh'
+        gh_dir.mkdir(mode=0o700)
+        hosts = gh_dir / 'hosts.yml'
+        hosts.write_text('simulated-login-config')
+        hosts.chmod(0o600)
+        self.config.pop('token_file')
+        self.config['auth'] = 'gh-login'
+        self.env['EXPECTED_GH_DIR'] = str(gh_dir.resolve())
+        self.save()
+        return hosts
+
+    def test_gh_login_loads_saved_config_and_isolates_git(self):
+        hosts = self.configure_gh_login()
+        before = hosts.read_bytes()
+        result = self.wrapped('git', 'commit', '--allow-empty', '-m', 'isolated login')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.git('log', '-1', '--format=%an <%ae>|%cn <%ce>'),
+                         'Robot <robot@example.test>|Robot <robot@example.test>')
+        self.assertEqual(self.wrapped('gh', 'pr', 'edit').returncode, 0)
+        self.assertEqual(hosts.read_bytes(), before)
+        self.assertEqual(self.before, (self.local.read_bytes(), self.global_config.read_bytes()))
+
+    def test_gh_login_failure_never_falls_back(self):
+        hosts = self.configure_gh_login()
+        for failure in ('missing', 'permissions', 'lookup', 'identity'):
+            with self.subTest(failure=failure):
+                hosts.write_text('simulated-login-config')
+                hosts.chmod(0o600)
+                if failure == 'missing':
+                    hosts.unlink()
+                elif failure == 'permissions':
+                    hosts.chmod(0o644)
+                elif failure == 'lookup':
+                    self.env['FAKE_TOKEN_FAIL'] = '1'
+                else:
+                    self.env['FAKE_LOGIN'] = 'human'
+                result = self.wrapped('gh', 'issue', 'create')
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse((self.root / 'executed').exists())
+                self.assertNotIn('simulated-token', result.stdout + result.stderr)
+                self.env.pop('FAKE_TOKEN_FAIL', None)
+                self.env.pop('FAKE_LOGIN', None)
+
+    def test_api_token_mode_does_not_use_unselected_login(self):
+        gh_dir = self.install / 'gh'
+        gh_dir.mkdir(mode=0o700)
+        (gh_dir / 'hosts.yml').write_text('unused-stale-config')
+        self.config['auth'] = 'api-token'
+        self.save()
+        self.token.unlink()
+        self.assertNotEqual(self.wrapped('gh', 'issue', 'create').returncode, 0)
+        self.assertFalse((self.root / 'executed').exists())
 
     def test_existing_account_and_linked_worker_checkout(self):
         self.config['mode'] = 'existing'

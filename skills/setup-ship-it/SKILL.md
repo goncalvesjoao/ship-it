@@ -27,7 +27,8 @@ Only enter this sequence after the user chooses machine-account mode. Use the st
 | Human reviewer | "Which person's GitHub username should receive PR review requests?" Example: `alex`. Explain that it must differ from the machine login. |
 | Commit name | "What name should appear on commits made by the machine account?" Suggest the inspected account display name or `Project assistant`; let the user confirm or supply another name. |
 | Commit email | "Which email belonging to the machine account should commits use?" Accept its verified email or exact GitHub noreply address. Explain where to find it in the machine account's GitHub email settings; never guess its numeric account ID or use the human's email. |
-| Credential file | "Do you already have this account's token saved in a private local file?" Offer "Yes, provide its absolute file path" or "Not yet, show local provisioning steps". Collect only the path, never the token. If provisioning is needed, guide it locally and keep verification pending until the file exists. |
+| Authentication method | "How should the machine account authenticate?" Offer exactly `API TOKEN` and `gh login`. Explain that API TOKEN uses a private token file; gh login opens GitHub's browser login and saves a separate local configuration. Preserve the existing method on reruns. |
+| API token file, only for API TOKEN | "Do you already have this account's token saved in a private local file?" Collect its absolute path, never its contents, or offer local provisioning steps. Skip this question for gh login. |
 
 Show a compact summary of the collected non-secret settings before the setup draft approval. Corrections update only the affected field; retain the other answers. Personal-account setup skips this sequence.
 
@@ -50,7 +51,22 @@ Install [scripts/run.py](scripts/run.py) there as executable `run`, using Python
 
 The example uses the personal-account workflow. For `existing` mode omit `token_file`; the helper captures the named account's stored token through `gh auth token --user`, ignoring ambient token variables. It does not switch or update the active account. If that account has no stored credential, report provisioning needed rather than silently using an environment token.
 
-For `machine` mode set `mode` to `machine` and add `token_file` with the absolute private token-file path. The human provisions an account token in a private absolute file outside all checkouts, mode 600, using a secure local terminal or secret manager. Never ask them to paste it into chat or run a command that prints it. Choose only the repository access/permissions needed for the selected workflow, including its issues, PRs, labels, review requests, and Git pushes. Explain any organization approval/SSO requirement discovered during verification. The helper uses that file directly with a temporary isolated `GH_CONFIG_DIR`; there is no persistent `gh` login to alter. Do not overwrite an existing token or local configuration on rerun. Compare non-secret settings, propose only necessary changes, and replace approved config atomically.
+For `machine` mode set `mode` to `machine` and `auth` to the selected method:
+
+- `api-token`: add `token_file` with the absolute private token-file path. The human provisions an account token outside all checkouts, mode 600, using a secure local terminal or secret manager. Never ask them to paste it into chat or run a command that prints it. Existing machine configurations with `token_file` and no `auth` retain this method.
+- `gh-login`: omit `token_file`. Use `<absolute-git-common-dir>/ship-it/gh` as the isolated `GH_CONFIG_DIR`. No additional path setting is needed; the helper locates it beside itself. After setup approval, prepare that directory with mode 700 and guide the human through the following command in their local interactive terminal. Replace the placeholder with the inspected absolute path, safely quoted. This is the only login operation; do not run it during skill development.
+
+```sh
+env -u GH_TOKEN -u GITHUB_TOKEN -u GH_ENTERPRISE_TOKEN -u GITHUB_ENTERPRISE_TOKEN \
+  GH_CONFIG_DIR="<absolute-git-common-dir>/ship-it/gh" \
+  gh auth login --hostname github.com --git-protocol https --web --insecure-storage
+```
+
+For `gh login`, explain before approval that `--insecure-storage` stores the login credential in the isolated local `hosts.yml` in plaintext, so the helper can use it across runs without changing the human's shared keychain entries. Keep the directory at mode 700 and `hosts.yml` at mode 600. The human must select the machine account during browser authorization. Do not call `gh auth setup-git`, switch accounts in the default configuration, or print the saved configuration. If the terminal cannot support interactive login, leave provisioning pending or let the user choose API TOKEN instead. Never change methods automatically.
+
+For both methods, choose only the repository access/permissions needed for the selected workflow, including its issues, PRs, labels, review requests, and Git pushes. Explain any organization approval/SSO requirement discovered during verification. The helper clears ambient token variables, reads only the selected source, and verifies the expected login before executing commands. In `gh-login` mode it loads the private saved configuration only if present and captures the named account's credential internally; missing configuration or a failed lookup stops execution without trying personal credentials or the other method. Subsequent commands use a temporary isolated `GH_CONFIG_DIR` and the verified credential.
+
+Do not overwrite existing token files, login configuration, or local settings on rerun. Reuse a working login; propose reauthentication only when needed. Compare non-secret settings, propose only necessary changes, and replace approved config atomically.
 
 The helper applies author and committer identity and Git credential settings per process, including child Git processes. Standard `https://github.com/owner/repo.git`, `git@github.com:owner/repo.git`, and `ssh://git@github.com/owner/repo.git` remotes work without edits: SSH URLs are translated to HTTPS only during that command. Inspect both fetch and push targets. SSH aliases, custom ports, custom URL rewrite rules, credential-bearing URLs, and Enterprise hosts require a separately reviewed extension; stop affected setup rather than changing remotes or falling back to SSH. Do not certify them as supported.
 
@@ -58,7 +74,7 @@ The helper applies author and committer identity and Git credential settings per
 
 Append/update a single Ship-it identity section in `docs/agents/issue-tracker.md`, preserving Matt's tracker policy and unrelated edits. Record:
 
-- Mode and expected GitHub account, plus human reviewer for machine mode.
+- Mode and expected GitHub account, plus authentication method and human reviewer for machine mode.
 - Confirmed commit identity and the supported GitHub host/repository.
 - Helper locator relative to Git's common directory, command prefix, and instruction to reload policy on every run.
 - Local provisioning on each machine/independent clone; credentials and absolute machine paths stay untracked.
@@ -83,4 +99,4 @@ Report the observed account, repository, and viewer permission as live read-only
 
 Report files changed, verified login/commit identity, supported remotes, and any incomplete provisioning or permission verification. Distinguish local simulated checks from live read-only GitHub evidence. Missing credentials leave setup prepared but unverified; never claim ready. Reruns reuse approved settings and repair only missing or explicitly changed pieces.
 
-The helper uses the documented [GitHub CLI environment precedence](https://cli.github.com/manual/gh_help_environment) and [Git credential helper protocol](https://git-scm.com/docs/gitcredentials).
+The helper uses the documented [GitHub CLI login options](https://cli.github.com/manual/gh_auth_login), [GitHub CLI environment precedence](https://cli.github.com/manual/gh_help_environment) and [Git credential helper protocol](https://git-scm.com/docs/gitcredentials).

@@ -38,10 +38,21 @@ def main():
             env.pop(key)
     mode = config['mode']
     if mode == 'machine':
-        token_path = Path(config['token_file'])
-        if not token_path.is_absolute() or token_path.stat().st_mode & 0o077:
-            raise ValueError('Token file must be absolute and private (chmod 600)')
-        token = token_path.read_text().strip()
+        auth = config.get('auth', 'api-token')
+        if auth == 'api-token':
+            token_path = Path(config['token_file'])
+            if not token_path.is_absolute() or token_path.stat().st_mode & 0o077:
+                raise ValueError('Token file must be absolute and private (chmod 600)')
+            token = token_path.read_text().strip()
+        elif auth == 'gh-login':
+            gh_dir = Path(__file__).resolve().with_name('gh')
+            hosts = gh_dir / 'hosts.yml'
+            if gh_dir.stat().st_mode & 0o077 or hosts.stat().st_mode & 0o077:
+                raise ValueError('Isolated gh configuration must be private')
+            env['GH_CONFIG_DIR'] = str(gh_dir)
+            token = capture(['gh', 'auth', 'token', '--hostname', 'github.com', '--user', expected], env)
+        else:
+            raise ValueError('Unknown machine authentication method')
     elif mode == 'existing':
         if os.environ.get('GH_CONFIG_DIR'):
             env['GH_CONFIG_DIR'] = os.environ['GH_CONFIG_DIR']
