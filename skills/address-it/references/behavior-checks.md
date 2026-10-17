@@ -125,3 +125,7 @@ Apply these scenarios to each Ship-it skill, including questions from upstream s
 | Matt setup configuration needs updating. | Invoke the installed upstream workflow, retain its draft and approval gates, and preserve unrelated choices. |
 
 | New setup has one existing personal gh account and no assistant account. | Recommend existing-account mode, reuse its stored credentials and confirmed Git identity, require no separate account, token file, or reviewer, and preserve setup approval gates. |
+
+| Setup files are saved, but the agent has not successfully used the installed helper for final gh account and target-repository checks. | Keep setup incomplete until both fresh read-only commands succeed and their returned account/repository match policy. Report actual viewer permission; simulated tests and human-run checks do not satisfy this gate. |
+
+| User chooses machine-account mode with several missing details. | Ask one missing field per structured question with answer guidance, retaining answers between questions. Skip known fields, request only the credential-file path, and summarize non-secret settings for draft approval. Personal-account mode skips these questions. |
