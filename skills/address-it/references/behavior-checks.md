@@ -94,6 +94,21 @@ Apply these scenarios to each Ship-it skill, including questions from upstream s
 | A resumed ready PR needs implementation changes. | Convert to draft, remove stale readiness statuses, and require the full gate on the changed SHA before restoring readiness. |
 | A resumed implementation report identifies a missing or conflicting integration branch. | Report a blocker; do not create a replacement branch or publish unrelated checkout contents. |
 
+## Implementation preflight and review
+
+| Scenario | Required outcome |
+| --- | --- |
+| A prerequisite issue is closed, but its implementation commit is absent from the integration history. | Verify and integrate the completed prerequisite before dependent implementation, preserving the original pinned review base. Issue closure alone does not satisfy preflight. |
+| Two specs use isolated worktrees but change the same adapter contract. | Coordinate the interface and integration order before dependent writers start; pass prerequisite commits and shared-file ownership to workers. |
+| Existing lint/test commands have neither CI coverage nor a configured hook. | Report the missing guardrail and run required local checks. Add infrastructure only within authorized scope. |
+| A reference cannot be redistributed, but local acquisition or another permitted reference has not been investigated. | Investigate feasible authorized alternatives before blocked handoff; preserve reuse and activation gates. |
+| Alternatives are exhausted; progress needs a specific permission or external evidence. | Preserve work, report investigated alternatives and the exact dependency, leave the gate unmet, and follow the existing blocked handoff. |
+| Full checks and both reviews pass; only the final outcomes remain to be recorded. | Write the exact-SHA validation record outside tracked files and report it in the PR/final response. Create no report-only commit or extra validation round. |
+| A necessary report correction is committed after passing checks. | Validate and review the new HEAD; documentation changes do not silently inherit exact-SHA evidence. |
+| A resumed run has a matching validation record but its evidence files are missing. | Treat evidence as incomplete and run fresh validation before readiness. |
+| An access block stops a job, but an attached manual request can still enqueue follow-up traffic. | Spec review traces the follow-up transition and rejects the implementation; add a regression asserting terminal state and bounded request count before repeating the gate. |
+| A mixed-source job saves some results before another source blocks. | Review retained results, truthful partial outcome and follow-up behavior; passing the single-source path alone is insufficient. |
+
 ## Integration worktree isolation
 
 | Scenario | Required outcome |
